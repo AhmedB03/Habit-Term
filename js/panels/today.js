@@ -1,11 +1,22 @@
-/* HABITERM — panels/today.js : today's book + shared habit row builder */
+/* HABITERM — panels/today.js : today's habit list + shared habit row builder */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
 HT.panels.today = (function () {
   const U = HT.util, S = HT.store, M = HT.metrics;
 
-  /* shared interactive habit row — used by TODAY, the day inspector and the dashboard book */
+  /* confetti when an edit makes today perfect */
+  function perfect(key) {
+    const dc = M.dayCompletion(key);
+    return dc.due > 0 && dc.filled === dc.due;
+  }
+  function withCheer(key, mutate) {
+    const was = key === S.todayKey() && perfect(key);
+    mutate();
+    if (key === S.todayKey() && !was && perfect(key)) HT.app.celebrate();
+  }
+
+  /* shared interactive habit row — used by Today, the day view and the home screen */
   function row(h, key, opts) {
     opts = opts || {};
     const editable = key <= S.todayKey();
@@ -20,25 +31,24 @@ HT.panels.today = (function () {
 
     const box = document.createElement('button');
     box.className = 'checkbox' + (isDone ? ' on' : '');
-    box.textContent = isDone ? '✓' : '';
-    box.title = isDone ? 'Cancel fill' : 'Fill order';
+    box.textContent = '✓';
+    box.title = isDone ? 'Mark as not done' : 'Mark as done';
     box.disabled = !editable;
-    box.onclick = () => { S.logSet(h.id, key, isDone ? 0 : tgt); refresh(); };
+    box.onclick = () => { withCheer(key, () => S.logSet(h.id, key, isDone ? 0 : tgt)); refresh(); };
     div.appendChild(box);
 
     const main = document.createElement('div');
     main.className = 'h-main';
     const nm = document.createElement('div');
     nm.className = 'h-name';
-    nm.innerHTML = '<span class="tkr-dot" style="background:' + h.color + '"></span>' +
-      '<span class="tkr">' + U.esc(h.ticker) + '</span>  ' + U.esc(h.name);
+    nm.innerHTML = '<span class="tkr-dot" style="background:' + h.color + '"></span>' + U.esc(h.name);
     nm.style.cursor = 'pointer';
-    nm.title = 'Open security view';
+    nm.title = 'Open habit details';
     nm.onclick = () => HT.app.navigate('hab', h.ticker);
     const mt = document.createElement('div');
     mt.className = 'h-meta';
     mt.textContent = h.type === 'qty'
-      ? (val + ' / ' + tgt + ' ' + (h.unit || 'UNITS'))
+      ? (val + ' / ' + tgt + ' ' + (h.unit || 'units'))
       : M.scheduleDesc(h);
     main.appendChild(nm);
     main.appendChild(mt);
@@ -59,7 +69,7 @@ HT.panels.today = (function () {
         b.className = 'btn btn-sm';
         b.textContent = p[0];
         b.disabled = !editable;
-        b.onclick = () => { S.logAdd(h.id, key, p[1]); refresh(); };
+        b.onclick = () => { withCheer(key, () => S.logAdd(h.id, key, p[1])); refresh(); };
         ctl.appendChild(b);
       });
       div.appendChild(ctl);
@@ -68,14 +78,14 @@ HT.panels.today = (function () {
     const st = document.createElement('div');
     st.className = 'h-streak num';
     const sv = M.streak(h, key);
-    st.textContent = sv > 0 ? sv + 'D' : '·';
+    st.textContent = sv > 0 ? '🔥 ' + sv : '';
     st.title = 'Streak as of this day';
     div.appendChild(st);
 
     const tag = document.createElement('span');
-    if (isDone) { tag.className = 'tag tag-fill'; tag.textContent = 'FILLED'; }
-    else if (val > 0) { tag.className = 'tag tag-part'; tag.textContent = 'PARTIAL'; }
-    else { tag.className = 'tag tag-open'; tag.textContent = 'OPEN'; }
+    if (isDone) { tag.className = 'tag tag-fill'; tag.textContent = 'Done'; }
+    else if (val > 0) { tag.className = 'tag tag-part'; tag.textContent = 'Almost'; }
+    else { tag.className = 'tag tag-open'; tag.textContent = 'To do'; }
     div.appendChild(tag);
 
     return div;
@@ -93,13 +103,13 @@ HT.panels.today = (function () {
     root.innerHTML =
       '<div class="grid">' +
       '<div class="panel col-8">' +
-        '<div class="panel-h"><span>TODAY&#39;S BOOK — ' + U.longDate(today) + '</span>' +
-        '<span class="ph-aux">' + dc.filled + '/' + dc.due + ' FILLED</span></div>' +
+        '<div class="panel-h"><span>Today · ' + U.longDate(today) + '</span>' +
+        '<span class="ph-aux">' + dc.filled + ' of ' + dc.due + ' done</span></div>' +
         '<div class="panel-b" id="td-rows"></div>' +
       '</div>' +
       '<div class="col-4">' +
-        '<div class="panel"><div class="panel-h"><span>SESSION STATS</span></div><div class="panel-b" id="td-stats"></div></div>' +
-        '<div class="panel" style="margin-top:8px"><div class="panel-h"><span>STREAK BOARD</span></div><div class="panel-b" id="td-streaks"></div></div>' +
+        '<div class="panel"><div class="panel-h"><span>Today\'s stats</span></div><div class="panel-b" id="td-stats"></div></div>' +
+        '<div class="panel" style="margin-top:14px"><div class="panel-h"><span>Streaks</span></div><div class="panel-b" id="td-streaks"></div></div>' +
       '</div>' +
       '</div>';
 
@@ -107,51 +117,52 @@ HT.panels.today = (function () {
     if (dc.due > 0 && dc.filled === dc.due) {
       const b = document.createElement('div');
       b.className = 'alert-row';
-      b.innerHTML = '<span class="al-flag al-grn">PERFECT</span><span class="up">ALL POSITIONS FILLED — FLAWLESS SESSION. SEE YOU AT TOMORROW&#39;S OPEN.</span>';
+      b.innerHTML = '<span class="al-flag al-grn">Perfect</span><span class="up">All done for today — great job! 🎉 See you tomorrow.</span>';
       wrap.appendChild(b);
     }
     if (due.length) {
       due.forEach(h => wrap.appendChild(row(h, today)));
     } else {
-      wrap.innerHTML += '<div class="empty"><div class="e-big">NO POSITIONS IN SESSION</div>' +
-        '<div class="e-sub">NOTHING SCHEDULED TODAY — REST DAY. THE TAPE NEVER JUDGES A PLANNED HOLIDAY.</div></div>';
+      wrap.innerHTML += '<div class="empty"><div style="font-size:38px;margin-bottom:10px">🌴</div>' +
+        '<div class="e-big">Rest day</div>' +
+        '<div class="e-sub">Nothing scheduled today — enjoy it. Your streaks are safe.</div></div>';
     }
     if (off.length) {
       const t = document.createElement('div');
       t.className = 'section-title';
-      t.textContent = 'NOT IN SESSION TODAY';
+      t.textContent = 'Not scheduled today';
       wrap.appendChild(t);
       off.forEach(h => {
         const r = document.createElement('div');
         r.className = 'hrow';
-        r.innerHTML = '<span class="tag tag-off">OFF</span>' +
+        r.innerHTML = '<span class="tag tag-off">Off</span>' +
           '<div class="h-main"><div class="h-name dim"><span class="tkr-dot" style="background:' + h.color + '"></span>' +
-          U.esc(h.ticker) + ' — ' + U.esc(h.name) + '</div>' +
+          U.esc(h.name) + '</div>' +
           '<div class="h-meta">' + M.scheduleDesc(h) + '</div></div>';
         wrap.appendChild(r);
       });
     }
 
-    /* session stats */
+    /* stats */
     const p7 = M.portfolioStats(7), p30 = M.portfolioStats(30);
     root.querySelector('#td-stats').innerHTML =
       '<div class="statgrid">' +
-      '<div class="stat"><div class="s-k">OPEN ORDERS</div><div class="s-v num">' + (dc.due - dc.filled) + '</div><div class="s-x">DUE TODAY</div></div>' +
-      '<div class="stat"><div class="s-k">FILL RATE 7D</div><div class="s-v num">' + U.fmtPct(p7.rate) + '</div><div class="s-x">' + p7.filled + '/' + p7.due + ' ORDERS</div></div>' +
-      '<div class="stat"><div class="s-k">FILL RATE 30D</div><div class="s-v num">' + U.fmtPct(p30.rate) + '</div><div class="s-x">' + p30.filled + '/' + p30.due + ' ORDERS</div></div>' +
-      '<div class="stat"><div class="s-k">PERFECT DAYS</div><div class="s-v num">' + M.perfectDays(30) + '</div><div class="s-x">LAST 30 SESSIONS</div></div>' +
+      '<div class="stat"><div class="s-k">Left to do</div><div class="s-v num">' + (dc.due - dc.filled) + '</div><div class="s-x">today</div></div>' +
+      '<div class="stat"><div class="s-k">This week</div><div class="s-v num">' + U.fmtPct(p7.rate) + '</div><div class="s-x">' + p7.filled + ' of ' + p7.due + ' done</div></div>' +
+      '<div class="stat"><div class="s-k">This month</div><div class="s-v num">' + U.fmtPct(p30.rate) + '</div><div class="s-x">' + p30.filled + ' of ' + p30.due + ' done</div></div>' +
+      '<div class="stat"><div class="s-k">Perfect days</div><div class="s-v num">' + M.perfectDays(30) + '</div><div class="s-x">last 30 days</div></div>' +
       '</div>';
 
     /* streak board */
     const sb = root.querySelector('#td-streaks');
     const rows = hs.map(h => ({ h: h, s: M.streak(h), b: M.bestStreak(h) }))
       .sort((a, b) => b.s - a.s);
-    sb.innerHTML = '<table class="tbl"><thead><tr><th>SEC</th><th class="r">STREAK</th><th class="r">BEST</th></tr></thead><tbody>' +
+    sb.innerHTML = '<table class="tbl"><thead><tr><th>Habit</th><th class="r">Streak</th><th class="r">Best</th></tr></thead><tbody>' +
       rows.map(r =>
         '<tr class="rowlink" data-cmd="HAB ' + U.esc(r.h.ticker) + '">' +
-        '<td><span class="tkr-dot" style="background:' + r.h.color + '"></span><span class="tkr">' + U.esc(r.h.ticker) + '</span></td>' +
-        '<td class="r num ' + (r.s > 0 ? 'acc' : 'dim') + '">' + r.s + 'D</td>' +
-        '<td class="r num dim">' + r.b + 'D</td></tr>'
+        '<td><span class="tkr-dot" style="background:' + r.h.color + '"></span><span class="tkr">' + U.esc(r.h.name) + '</span></td>' +
+        '<td class="r num ' + (r.s > 0 ? '' : 'dim') + '">' + (r.s > 0 ? '🔥 ' + r.s : '—') + '</td>' +
+        '<td class="r num dim">' + r.b + '</td></tr>'
       ).join('') + '</tbody></table>';
   }
 

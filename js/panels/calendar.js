@@ -1,4 +1,4 @@
-/* HABITERM — panels/calendar.js : month grid + day inspector (backfill past days) */
+/* HABITERM — panels/calendar.js : month grid + day view (edit past days) */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
@@ -24,11 +24,11 @@ HT.panels.calendar = (function () {
     for (let i = 0; i < 7; i++) headers.push('<th>' + U.WD[(ws + i) % 7] + '</th>');
 
     let html =
-      '<div class="panel"><div class="panel-h"><span>CALENDAR — ' + U.MONTHS_FULL[m] + ' ' + y + '</span>' +
+      '<div class="panel"><div class="panel-h"><span>' + U.MONTHS_FULL[m] + ' ' + y + '</span>' +
       '<span class="ph-aux">' +
-        '<button class="btn btn-sm" id="cal-prev">◀ PREV</button>' +
-        '<button class="btn btn-sm" id="cal-today">CURRENT</button>' +
-        '<button class="btn btn-sm" id="cal-next">NEXT ▶</button>' +
+        '<button class="btn btn-sm" id="cal-prev">‹ Prev</button>' +
+        '<button class="btn btn-sm" id="cal-today">Today</button>' +
+        '<button class="btn btn-sm" id="cal-next">Next ›</button>' +
       '</span></div>' +
       '<div class="panel-b"><table class="cal-table"><thead><tr>' + headers.join('') + '</tr></thead><tbody>';
 
@@ -43,16 +43,17 @@ HT.panels.calendar = (function () {
         let style = '';
         if (!future && dc.due > 0) {
           style = 'background:' + (dc.frac === 0 && key !== today
-            ? 'rgba(255,79,67,.08)'
-            : C.hexA(acc, 0.03 + 0.26 * dc.frac));
+            ? 'rgba(226,60,82,.08)'
+            : C.hexA(acc, 0.05 + 0.30 * dc.frac));
         }
         let dots = '';
         hs.forEach(h => {
           if (!M.isScheduled(h, key)) return;
           const isDone = M.done(h, key);
-          const col = future ? '#22211a' : h.color;
-          dots += '<span class="dot' + (!isDone && !future ? ' miss' : '') + '" style="background:' + col + '" title="' +
-            U.esc(h.ticker) + (future ? '' : (isDone ? ' — FILLED' : ' — MISSED')) + '"></span>';
+          dots += future
+            ? '<span class="dot off-dot" title="' + U.esc(h.name) + '"></span>'
+            : '<span class="dot' + (!isDone ? ' miss' : '') + '" style="background:' + h.color + '" title="' +
+              U.esc(h.name) + (isDone ? ' — done' : ' — missed') + '"></span>';
         });
         const pct = (!future && dc.due > 0)
           ? '<div class="cal-pct num ' + (dc.frac >= 1 ? 'up' : dc.frac > 0 ? 'acc' : 'dn') + '">' + Math.round(dc.frac * 100) + '%</div>'
@@ -64,7 +65,7 @@ HT.panels.calendar = (function () {
       html += '</tr>';
     }
     html += '</tbody></table>' +
-      '<div class="dim" style="font-size:10px;margin-top:6px">CLICK ANY PAST DAY TO INSPECT &amp; BACKFILL · DOTS = SCHEDULED HABITS (DIM = MISSED)</div>' +
+      '<div class="dim" style="font-size:11.5px;margin-top:8px">Click any past day to view or edit it · dots are scheduled habits (faded = missed)</div>' +
       '</div></div>';
 
     root.innerHTML = html;
@@ -79,7 +80,7 @@ HT.panels.calendar = (function () {
   return { render, reset: function () { off = 0; } };
 })();
 
-/* ---------- day inspector: view + backfill a single session ---------- */
+/* ---------- day view: see + edit a single day ---------- */
 HT.panels.day = (function () {
   const U = HT.util, S = HT.store, M = HT.metrics;
 
@@ -94,23 +95,23 @@ HT.panels.day = (function () {
 
     root.innerHTML =
       '<div class="panel"><div class="panel-h">' +
-      '<span>DAY INSPECTOR — ' + U.longDate(key) + (key === today ? ' (TODAY)' : '') + '</span>' +
-      '<span class="ph-aux">' + dc.filled + '/' + dc.due + ' FILLED · <button class="btn btn-sm" data-cmd="CAL">◀ BACK TO CAL</button></span>' +
+      '<span>' + U.longDate(key) + (key === today ? ' · Today' : '') + '</span>' +
+      '<span class="ph-aux">' + dc.filled + ' of ' + dc.due + ' done · <button class="btn btn-sm" data-cmd="CAL">‹ Calendar</button></span>' +
       '</div><div class="panel-b" id="day-rows"></div></div>';
 
     const wrap = root.querySelector('#day-rows');
     if (key !== today) {
       const note = document.createElement('div');
       note.className = 'dim';
-      note.style.cssText = 'font-size:10px;letter-spacing:1px;margin-bottom:8px';
-      note.textContent = 'AMENDING THE HISTORICAL TAPE — CHANGES RECOMPUTE STREAKS, PRICES AND GRADES.';
+      note.style.cssText = 'font-size:12px;margin-bottom:10px';
+      note.textContent = 'Editing a past day — streaks, scores and grades update automatically.';
       wrap.appendChild(note);
     }
     if (due.length) {
       due.forEach(h => wrap.appendChild(HT.panels.today.row(h, key)));
     } else {
-      wrap.innerHTML += '<div class="empty"><div class="e-big">NO POSITIONS THIS DAY</div>' +
-        '<div class="e-sub">NOTHING WAS SCHEDULED ON THIS DATE.</div></div>';
+      wrap.innerHTML += '<div class="empty"><div class="e-big">Nothing scheduled</div>' +
+        '<div class="e-sub">No habits were scheduled on this day.</div></div>';
     }
   }
 

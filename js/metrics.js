@@ -17,8 +17,8 @@ HT.metrics = (function () {
   function done(h, key) { return S.getValue(h.id, key) >= target(h); }
 
   function scheduleDesc(h) {
-    if (h.schedule.kind === 'daily') return 'DAILY';
-    return h.schedule.days.map(d => U.WD[d]).join('·') || 'NEVER';
+    if (h.schedule.kind === 'daily') return 'Every day';
+    return h.schedule.days.map(d => U.WD[d]).join(' · ') || 'Never';
   }
 
   /* current streak as of a date; an unfilled "today" doesn't break the run */
@@ -165,8 +165,8 @@ HT.metrics = (function () {
 
   function gradeOf(h) {
     if (scheduledCount(h) < 5) {
-      return { letter: 'NR', score: null, parts: null, outlook: 'NEW LISTING',
-               advice: 'INSUFFICIENT TRADING HISTORY — RATING ISSUED AFTER 5 SCHEDULED SESSIONS.' };
+      return { letter: 'NR', score: null, parts: null, outlook: 'NEW',
+               advice: 'Brand new — your grade unlocks after 5 scheduled days.' };
     }
     const r30 = rate(h, 30); const r30v = r30 == null ? 0 : r30;
     const r7 = rate(h, 7); const r7v = r7 == null ? r30v : r7;
@@ -186,12 +186,12 @@ HT.metrics = (function () {
     const outlook = drift > 0.07 ? 'POSITIVE' : drift < -0.07 ? 'NEGATIVE' : 'STABLE';
 
     let advice;
-    if (score >= 90 && st >= 10) advice = 'BLUE CHIP. PROTECT THE STREAK AT ALL COSTS.';
-    else if (TRD < 35) advice = 'MOMENTUM BLEEDING — SHRINK THE POSITION (LOWER THE TARGET) AND REBUILD DAILY FILLS.';
-    else if (C30 < 50) advice = '30D FILL RATE UNDER 50% — RESCHEDULE TO FEWER DAYS AND WIN THOSE FIRST.';
-    else if (STK < 30 && C30 >= 70) advice = 'GOOD FILL RATE, FRAGILE STREAKS — TARGET 7 STRAIGHT SESSIONS.';
-    else if (outlook === 'POSITIVE') advice = 'UPTREND CONFIRMED — MAINTAIN CURRENT ALLOCATION.';
-    else advice = 'HOLD STEADY. CONSISTENCY COMPOUNDS.';
+    if (score >= 90 && st >= 10) advice = 'Rock solid — protect that streak!';
+    else if (TRD < 35) advice = 'Losing steam — make the goal smaller and easy to win, then build back up.';
+    else if (C30 < 50) advice = 'Done less than half the time this month — try fewer scheduled days and nail those first.';
+    else if (STK < 30 && C30 >= 70) advice = 'Strong month but fragile streaks — aim for 7 days in a row.';
+    else if (outlook === 'POSITIVE') advice = 'Trending up — keep doing what you\'re doing.';
+    else advice = 'Steady. Consistency compounds.';
 
     return { letter, score, parts: { C30, TRD, STK, CON, LIFE }, outlook, advice };
   }
@@ -290,28 +290,28 @@ HT.metrics = (function () {
     S.habits().forEach(h => {
       if (isScheduled(h, yda) && !done(h, yda)) {
         const prior = streak(h, U.addDays(yda, -1));
-        if (prior >= 5) out.push({ sev: 'red', text: 'STREAK SNAPPED: ' + h.ticker + ' ' + prior + 'D RUN ENDED YDA.' });
+        if (prior >= 5) out.push({ sev: 'red', text: 'Streak broken — ' + h.name + '\'s ' + prior + '-day run ended yesterday.' });
       }
       const r7 = rate(h, 7), r30 = rate(h, 30);
       if (r7 != null && r30 != null && r7 < r30 - 0.2) {
-        out.push({ sev: 'red', text: 'DOWNGRADE WATCH: ' + h.ticker + ' 7D FILL ' + Math.round(r7 * 100) + '% VS 30D ' + Math.round(r30 * 100) + '%.' });
+        out.push({ sev: 'red', text: h.name + ' is slipping — ' + Math.round(r7 * 100) + '% this week vs ' + Math.round(r30 * 100) + '% this month.' });
       }
       if (isScheduled(h, today) && !done(h, today)) {
         const st = streak(h);
-        if (st >= 3) out.push({ sev: 'yel', text: 'AT RISK: ' + h.ticker + ' ' + st + 'D STREAK UNPROTECTED — FILL TODAY.' });
+        if (st >= 3) out.push({ sev: 'yel', text: 'Don\'t break the chain! ' + h.name + ' has a ' + st + '-day streak — do it today.' });
       }
       const ps = priceSeries(h);
       if (ps.length > 10) {
         const last = ps[ps.length - 1].p;
         let max = 0;
         ps.forEach(x => { if (x.p > max) max = x.p; });
-        if (last >= max && last > 110) out.push({ sev: 'grn', text: h.ticker + ' PRINTS RECORD HIGH ' + last.toFixed(1) + '.' });
+        if (last >= max && last > 110) out.push({ sev: 'grn', text: h.name + ' just hit an all-time momentum high of ' + last.toFixed(1) + '!' });
       }
     });
 
     const yc = dayCompletion(yda);
     if (yc.due > 0 && yc.filled === yc.due) {
-      out.push({ sev: 'grn', text: 'FLAWLESS SESSION YDA — 100% OF TARGETS FILLED.' });
+      out.push({ sev: 'grn', text: 'Perfect day yesterday — everything done 🎉' });
     }
 
     const order = { red: 0, yel: 1, grn: 2 };

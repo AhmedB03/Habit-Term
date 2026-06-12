@@ -4,12 +4,13 @@ window.HT = window.HT || {};
 HT.store = (function () {
   const U = HT.util;
   const LS_KEY = 'habiterm_v1';
-  const COLORS = ['#ffb000', '#3ddc8e', '#6cb6ff', '#ff7ab8', '#c792ea', '#ffd75e', '#4dd0e1', '#ff8a50'];
+  const COLORS = ['#6c5ce7', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#f59e0b', '#06b6d4', '#f97316'];
 
   function defaultState() {
     return {
       version: 1,
-      settings: { dayStartHour: 0, weekStart: 1, accent: 'amber', scanlines: true },
+      firstRunAt: Date.now(),   /* anchors the Premium trial */
+      settings: { dayStartHour: 0, weekStart: 1, accent: 'violet', theme: 'light' },
       habits: [],
       log: {}   /* log[dateKey][habitId] = number logged that day */
     };
@@ -29,7 +30,10 @@ HT.store = (function () {
       }
     } catch (e) { console.warn('HABITERM: failed to load state', e); }
     state.settings = Object.assign(defaultState().settings, state.settings || {});
+    if (!state.firstRunAt) { state.firstRunAt = Date.now(); save(); }
   }
+
+  function firstRunAt() { return state.firstRunAt || Date.now(); }
 
   function save() {
     if (muted) return;
@@ -127,14 +131,15 @@ HT.store = (function () {
     try {
       const s = JSON.parse(text);
       if (!s || s.version !== 1 || !Array.isArray(s.habits) || !s.log || typeof s.log !== 'object') {
-        return { ok: false, error: 'UNRECOGNIZED FILE FORMAT' };
+        return { ok: false, error: 'unrecognized file format' };
       }
       state = s;
       state.settings = Object.assign(defaultState().settings, s.settings || {});
+      if (!state.firstRunAt) state.firstRunAt = Date.now();
       save();
       return { ok: true };
     } catch (e) {
-      return { ok: false, error: 'INVALID JSON' };
+      return { ok: false, error: 'invalid JSON' };
     }
   }
 
@@ -153,9 +158,9 @@ HT.store = (function () {
           kw: ['meditation', 'mindfulness'], p: t => 0.52 + 0.42 * t },
         { ticker: 'RUN5', name: '5K Run', type: 'bool', sched: { kind: 'weekdays', days: [1, 3, 5] }, color: COLORS[1],
           kw: ['running', 'aerobic exercise'], p: t => (t > 0.45 && t < 0.6) ? 0.45 : 0.88 },
-        { ticker: 'READ', name: 'Read 20 Pages', type: 'qty', target: 20, unit: 'PAGES', sched: { kind: 'daily', days: [] }, color: COLORS[2],
+        { ticker: 'READ', name: 'Read 20 Pages', type: 'qty', target: 20, unit: 'pages', sched: { kind: 'daily', days: [] }, color: COLORS[2],
           kw: ['reading habits', 'bibliotherapy'], p: t => 0.92 - 0.45 * t },
-        { ticker: 'H2O', name: 'Hydration', type: 'qty', target: 8, unit: 'GLASSES', sched: { kind: 'daily', days: [] }, color: COLORS[6],
+        { ticker: 'H2O', name: 'Hydration', type: 'qty', target: 8, unit: 'glasses', sched: { kind: 'daily', days: [] }, color: COLORS[6],
           kw: ['hydration', 'water intake'], p: t => 0.55 + 0.25 * t },
         { ticker: 'CODE', name: 'Ship Side Project', type: 'bool', sched: { kind: 'weekdays', days: [1, 2, 3, 4, 5] }, color: COLORS[4],
           kw: ['deep work', 'programmer productivity'], p: t => 0.7 + 0.18 * Math.sin(t * 9) },
@@ -196,7 +201,7 @@ HT.store = (function () {
   }
 
   return {
-    COLORS, load, save, settings, updateSettings, todayKey,
+    COLORS, load, save, settings, updateSettings, todayKey, firstRunAt,
     habits, getHabit, suggestTicker, addHabit, updateHabit, deleteHabit,
     getValue, logSet, logAdd,
     exportJSON, importJSON, wipe, loadDemo

@@ -66,7 +66,7 @@ HT.feed = (function () {
       );
       const r = sum.result || {};
       return ids.map(id => r[id]).filter(Boolean).map(it => ({
-        title: it.title || '(UNTITLED)',
+        title: it.title || '(untitled)',
         journal: it.fulljournalname || it.source || '',
         date: it.pubdate || '',
         authors: (it.authors || []).slice(0, 3).map(a => a.name).join(', '),
@@ -83,12 +83,46 @@ HT.feed = (function () {
         '&numericFilters=points%3E%3D5&query=' + encodeURIComponent(query)
       );
       return (j.hits || []).map(h => ({
-        title: h.title || '(UNTITLED)',
+        title: h.title || '(untitled)',
         url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),
         hn: 'https://news.ycombinator.com/item?id=' + h.objectID,
         points: h.points || 0,
         comments: h.num_comments || 0,
         at: h.created_at || ''
+      }));
+    });
+  }
+
+  /* JSONP fallback for APIs without CORS (iTunes Search) */
+  function getJSONP(url, timeoutMs) {
+    return new Promise((resolve, reject) => {
+      const cb = '__ht_jsonp_' + Math.random().toString(36).slice(2);
+      const s = document.createElement('script');
+      const t = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeoutMs || 12000);
+      function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
+      window[cb] = data => { cleanup(); resolve(data); };
+      s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cb;
+      s.onerror = () => { cleanup(); reject(new Error('network')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  /* latest apps & tools via the iTunes Search API (key-free) */
+  function apps(query, n, force) {
+    return cached('app', query + '_' + n, force, async () => {
+      const j = await getJSONP(
+        'https://itunes.apple.com/search?media=software&entity=software&limit=' + n +
+        '&term=' + encodeURIComponent(query)
+      );
+      return (j.results || []).map(r => ({
+        name: r.trackName || '(untitled)',
+        dev: r.artistName || '',
+        icon: r.artworkUrl100 || '',
+        rating: r.averageUserRating ? Math.round(r.averageUserRating * 10) / 10 : null,
+        ratings: r.userRatingCount || 0,
+        price: r.formattedPrice || (r.price === 0 ? 'Free' : ''),
+        url: r.trackViewUrl || '',
+        genre: (r.genres && r.genres[0]) || ''
       }));
     });
   }
@@ -109,5 +143,5 @@ HT.feed = (function () {
     });
   }
 
-  return { studies, wire, primer };
+  return { studies, wire, primer, apps };
 })();

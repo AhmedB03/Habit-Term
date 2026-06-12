@@ -1,24 +1,33 @@
-/* HABITERM — panels/grade.js : the report card — letter grades, GPA, advisory notes */
+/* HABITERM — panels/grade.js : the report card — letter grades, GPA, advice */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
 HT.panels.grade = (function () {
   const U = HT.util, S = HT.store, M = HT.metrics;
 
-  const PART_LABELS = { C30: '30D FILL', TRD: 'MOMENTUM', STK: 'STREAK', CON: 'CONSISTENCY', LIFE: 'LIFETIME' };
+  const PART_LABELS = { C30: '30-day', TRD: 'Momentum', STK: 'Streak', CON: 'Consistency', LIFE: 'All-time' };
   const PART_WEIGHTS = { C30: '45%', TRD: '20%', STK: '15%', CON: '10%', LIFE: '10%' };
+  const OUTLOOK = { POSITIVE: 'Improving', NEGATIVE: 'Slipping', STABLE: 'Steady', NEW: 'New' };
 
   function gpaLabel(g) {
-    if (g == null) return 'NOT RATED';
-    if (g >= 3.7) return "DEAN'S LIST";
-    if (g >= 3.0) return 'SOLID BOOK';
-    if (g >= 2.0) return 'UNDER REVIEW';
-    return 'RESTRUCTURING REQUIRED';
+    if (g == null) return 'Not graded yet';
+    if (g >= 3.7) return "Dean's list 🏅";
+    if (g >= 3.0) return 'Solid work';
+    if (g >= 2.0) return 'Needs focus';
+    return 'Time for a reset';
   }
 
   function render(root) {
     const hs = S.habits();
     if (!hs.length) { HT.app.emptyState(root); return; }
+    if (!HT.premium.active()) {
+      HT.premium.renderLock(root, {
+        emoji: '🎓',
+        title: 'The report card is a Premium feature',
+        sub: 'Letter grades for every habit, an overall GPA,<br>and coaching advice on what to fix first.'
+      });
+      return;
+    }
 
     const cards = hs.map(h => ({ h: h, g: M.gradeOf(h) }))
       .sort((a, b) => (b.g.score == null ? -1 : b.g.score) - (a.g.score == null ? -1 : a.g.score));
@@ -28,20 +37,20 @@ HT.panels.grade = (function () {
 
     root.innerHTML =
       '<div class="grid">' +
-      '<div class="panel col-4"><div class="panel-h"><span>PORTFOLIO GPA</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Grade average</span></div>' +
       '<div class="panel-b">' +
         '<div class="hero-num num ' + (gpa != null && gpa >= 3 ? 'up' : gpa != null && gpa < 2 ? 'dn' : '') + '">' +
-          (gpa == null ? 'NR' : gpa.toFixed(2)) + '</div>' +
-        '<div class="hero-sub acc">' + gpaLabel(gpa) + '</div>' +
-        '<div class="kv" style="margin-top:12px">' +
-          '<span class="k">RATED SECURITIES</span><span class="v num">' + cards.filter(c => c.g.letter !== 'NR').length + ' / ' + hs.length + '</span>' +
-          '<span class="k">POSITIVE OUTLOOK</span><span class="v num up">' + pos + '</span>' +
-          '<span class="k">NEGATIVE OUTLOOK</span><span class="v num ' + (neg ? 'dn' : 'dim') + '">' + neg + '</span>' +
+          (gpa == null ? '—' : gpa.toFixed(2)) + '</div>' +
+        '<div class="hero-sub acc" style="font-weight:600">' + gpaLabel(gpa) + '</div>' +
+        '<div class="kv" style="margin-top:14px">' +
+          '<span class="k">Graded habits</span><span class="v num">' + cards.filter(c => c.g.letter !== 'NR').length + ' of ' + hs.length + '</span>' +
+          '<span class="k">Improving</span><span class="v num up">' + pos + '</span>' +
+          '<span class="k">Slipping</span><span class="v num ' + (neg ? 'dn' : 'dim') + '">' + neg + '</span>' +
         '</div>' +
-        '<div class="dim" style="font-size:10px;margin-top:14px;line-height:1.6">GRADE MODEL: 45% 30-DAY FILL RATE · 20% MOMENTUM (7D VS 30D) · 15% STREAK POWER · 10% WEEK-TO-WEEK CONSISTENCY · 10% LIFETIME RECORD.</div>' +
+        '<div class="dim" style="font-size:11.5px;margin-top:16px;line-height:1.6">How grades work: 45% 30-day completion · 20% momentum (this week vs this month) · 15% streak · 10% consistency · 10% all-time record.</div>' +
       '</div></div>' +
 
-      '<div class="panel col-8"><div class="panel-h"><span>REPORT CARD</span><span class="ph-aux">CLICK A ROW FOR THE FULL TEAR SHEET</span></div>' +
+      '<div class="panel col-8"><div class="panel-h"><span>Report card</span><span class="ph-aux">click a habit for details</span></div>' +
       '<div class="panel-b" id="gr-cards"></div></div>' +
       '</div>';
 
@@ -64,11 +73,13 @@ HT.panels.grade = (function () {
       const oCls = g.outlook === 'POSITIVE' ? 'up' : g.outlook === 'NEGATIVE' ? 'dn' : 'dim';
       card.innerHTML =
         '<div class="gc-letter"><div class="grade-letter g-' + g.letter[0] + '">' + g.letter + '</div>' +
-        '<div class="gc-score num">' + (g.score == null ? 'UNRATED' : g.score.toFixed(1) + ' PTS') + '</div></div>' +
+        '<div class="gc-score num">' + (g.score == null ? 'New' : g.score.toFixed(1) + ' / 100') + '</div></div>' +
         '<div class="gc-main">' +
-          '<div><span class="tkr-dot" style="background:' + c.h.color + '"></span><span class="tkr">' + U.esc(c.h.ticker) + '</span> ' +
-          '<span class="dim">' + U.esc(c.h.name) + '</span> · <span class="' + oCls + '" style="font-size:10px;letter-spacing:1px">OUTLOOK ' + g.outlook + '</span></div>' +
-          '<div class="gc-advice">▍' + U.esc(g.advice) + '</div>' +
+          '<div><span class="tkr-dot" style="background:' + c.h.color + '"></span><span class="tkr">' + U.esc(c.h.name) + '</span> ' +
+          '<span class="tag ' + (oCls === 'up' ? 'tag-fill' : oCls === 'dn' ? '' : 'tag-off') + '" ' +
+          (oCls === 'dn' ? 'style="background:var(--dn-soft);color:var(--dn)"' : '') + '>' +
+          (OUTLOOK[g.outlook] || g.outlook) + '</span></div>' +
+          '<div class="gc-advice">' + U.esc(g.advice) + '</div>' +
           parts +
         '</div>';
       wrap.appendChild(card);

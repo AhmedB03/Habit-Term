@@ -1,81 +1,106 @@
-# ▮▮ HABITERM — Habit Intelligence Terminal
+# ✓ Habiterm — a friendly habit tracker
 
-A Bloomberg-terminal-style habit tracker. Every habit trades like a security: it has a
-ticker, a momentum price, a streak, a letter grade — and its own live research desk
-pulling the latest studies and products from the real world.
+A clean, modern habit tracker that runs entirely in your browser. Every habit gets a
+momentum score, a streak, a letter grade — and its own Discover feed pulling the latest
+studies and products from the real world.
 
 **Zero dependencies. No build step. No account. Your data never leaves your machine**
-(except the research queries themselves).
+(except the Discover queries themselves).
 
 ## Run it
 
 - Double-click `index.html`, **or**
 - serve the folder: `python -m http.server 8123` → http://localhost:8123
 
-First launch offers a **demo portfolio** (6 habits, 120 days of generated history) so
-every panel lights up immediately. `WIPE` it when you're ready to trade for real.
+First launch offers **demo data** (6 habits, 120 days of generated history) so
+every page lights up immediately. Erase it from Settings when you're ready to track for real.
 
-## The terminal
+## The pages
 
-| Panel | Command | What it does |
+| Page | Command | What it does |
 |---|---|---|
-| Dashboard | `DASH` (F1) | HABIX composite index, alerts, today's book, top movers, 35-day heat, latest intel |
-| Today | `TODAY` (F2) | Fill today's orders — checkboxes, quantity steppers, streak board, session stats |
-| Calendar | `CAL` (F3) | Month grid with fill heat + per-habit dots; click any past day to inspect & backfill |
-| Report | `RPT` (F4) | 7/30/90-day fill rates with deltas, weekday analysis, habit-pair correlation matrix |
-| Grader | `GRADE` (F6) | Letter grade per habit (A+…F), portfolio GPA, outlook, advisory notes |
-| Research | `RES [TICKER]` (F7) | **Live feeds per habit**: latest PubMed studies, Hacker News products/discussion, Wikipedia primer |
-| Securities | `HAB [TICKER]` (F8) | Listings table, or a full tear sheet: price chart, vitals, activity strip, recent tape |
+| Home | `DASH` (F1) | Momentum overview, heads-up alerts, today's list, trends, 35-day activity, articles |
+| Today | `TODAY` (F2) | Check off today's habits — circles, amount steppers, streaks, daily stats |
+| Calendar | `CAL` (F3) | Month grid with completion heat + per-habit dots; click any past day to view & edit |
+| Stats | `RPT` (F4) | 7/30/90-day completion with deltas, weekday analysis, habit-pair matrix |
+| Grades | `GRADE` (F6) | Letter grade per habit (A+…F), overall GPA, outlook, friendly advice |
+| Discover | `RES [code]` (F7) | **Live feeds per habit**: latest apps & tools (App Store), gear links, PubMed studies, Hacker News launches/discussion, Wikipedia primer |
+| Habits | `HAB [code]` (F8) | All habits, or one habit's full detail: score chart, stats, history |
+| Premium | `PREMIUM` | Plans, license activation, free-vs-premium comparison |
 
-### Command line (the fun part)
+### The search bar (power-user shortcut)
 
-Click the `>` bar or press `/` (or `Ctrl+K`), type, hit Enter:
+Click the search bar or press `/` (or `Ctrl+K`), type, hit Enter:
 
 ```
-DONE MEDT          fill an order from the keyboard
-DONE H2O 3         log 3 units toward a quantity habit
-UNDO MEDT          cancel today's fill
-MEDT               a bare ticker jumps straight to its tear sheet
-ADD · EDIT MEDT    list / amend a habit
+DONE MEDT          check off a habit from the keyboard
+DONE H2O 3         log 3 units toward an amount habit
+UNDO MEDT          un-check today
+MEDT               a bare habit code jumps straight to its details
+ADD · EDIT MEDT    add / edit a habit
 EXPORT · IMPORT    JSON backup / restore
-DEMO · WIPE        load demo portfolio / erase everything
+DEMO · WIPE        load demo data / erase everything
 HELP               everything else
 ```
 
-Autocomplete palette with Tab/↑/↓, command history, F-key panel hopping.
+Autocomplete with Tab/↑/↓, command history, F-key page hopping.
 
 ## How the numbers work
 
-- **Price** — every habit starts at 100. A filled session compounds **+1.8%**, a miss
-  **−2.2%**, partial fills scale in between. Unscheduled days carry forward. HABIX is
-  the average across listings. An unfilled "today" never moves the price (or breaks a
-  streak) until the session closes.
-- **Grade** — 45% 30-day fill rate (√-curved: 85% fill is genuinely excellent), 20%
+- **Momentum** — every habit starts at 100. Doing it compounds **+1.8%**, a miss
+  **−2.2%**, partial progress scales in between. Unscheduled days carry forward. The
+  home-screen score is the average across habits. An unfinished "today" never moves
+  the score (or breaks a streak) until the day ends.
+- **Grade** — 45% 30-day completion (√-curved: 85% is genuinely excellent), 20%
   momentum (7d vs 30d), 15% streak power (14 straight = full marks), 10% week-to-week
-  consistency, 10% lifetime record. New listings are `NR` until 5 scheduled sessions.
-- **Correlation** — phi coefficient over shared scheduled sessions in the last 60 days.
+  consistency, 10% all-time record. New habits are ungraded until 5 scheduled days.
+- **Habit pairs** — phi coefficient over shared scheduled days in the last 60 days.
   Build routines around positive pairs.
-- **Alerts** — streaks at risk, streaks snapped, downgrade watches, record highs,
-  flawless sessions.
+- **Heads up** — streaks at risk, streaks broken, slipping habits, record highs,
+  perfect days.
 
 ## Habits can be
 
-- **Check** (did it / didn't) or **Quantity** (e.g. 8 glasses, 20 pages — partial credit counts)
+- **Check off** (did it / didn't) or **Count an amount** (e.g. 8 glasses, 20 pages — partial credit counts)
 - **Daily** or specific weekdays (streaks and rates respect the schedule; off-days never count against you)
-- Tagged with **research keywords** that drive the RES terminal feeds
+- Tagged with **topic keywords** that drive the Discover feeds
 
-## Settings (`SET`)
+## Settings
 
-Accent phosphor (amber/green/cyan/magenta) · session rollover hour (night owls: set
-03:00 and 1 a.m. still counts as "today") · week start · CRT scanlines · data desk
-(export/import/demo/wipe).
+Light/dark theme · accent color (violet/orange/green/blue/pink) · day rollover hour
+(night owls: set 3:00 and 1 a.m. still counts as "today") · week start · data
+(export/import/demo/erase).
+
+## Premium & making money 💸
+
+Habiterm ships with two revenue streams, both wired and ready:
+
+1. **Premium** — free plan is 3 habits + core tracking; Premium ($19 lifetime by default)
+   unlocks unlimited habits, Stats, the report card, and dark mode + accent colors.
+   New users get a 14-day full trial. Buyers activate with a license key
+   (`HT-XXXX-XXXX-XXXX`) — works offline.
+2. **Affiliate gear links** — every habit's Discover page links to Amazon/Etsy/eBay
+   searches for related gear; add your Amazon Associates tag and free users earn you
+   commission too.
+
+**To start selling**, open `js/premium.js` and fill in `CONFIG`:
+
+- `checkoutUrl` — your Gumroad / Lemon Squeezy / Stripe Payment Link checkout page
+  (set it to auto-issue license keys in the `HT-XXXX-XXXX-XXXX` format, or email them yourself).
+- `amazonTag` — your Amazon Associates tag (e.g. `habiterm-20`).
+- `priceLabel` / `periodLabel` — whatever you charge.
+
+Note: key validation is client-side (honor system), which is normal for indie
+local-first apps. For hard verification, call your payment provider's license API
+inside `activate()` in `js/premium.js`.
 
 ## Data & APIs
 
 - State lives in `localStorage` (`habiterm_v1`), export/import as JSON.
-- Research desks (all key-free, CORS-enabled, cached 6h, throttled politely):
+- Discover feeds (all key-free, cached 6h, throttled politely):
+  - iTunes Search API — latest apps & tools per habit (JSONP, no key)
   - NCBI PubMed E-utilities — latest studies
-  - Hacker News via Algolia — products & discussion
+  - Hacker News via Algolia — launches & discussion
   - Wikipedia REST — topic primers
 - Fully offline-capable; feeds degrade to cache or a polite error. The tracker itself
   never needs the network.
@@ -84,13 +109,14 @@ Accent phosphor (amber/green/cyan/magenta) · session rollover hour (night owls:
 
 ```
 index.html            shell
-css/terminal.css      CRT styling, layout, components
+css/terminal.css      design system: themes, layout, components
 js/util.js            dates (local, DST-safe keys), formatting
-js/store.js           state, persistence, demo portfolio
-js/metrics.js         streaks, rates, prices, grades, correlations, alerts
+js/store.js           state, persistence, demo data
+js/premium.js         plans, trial, license keys, upgrade page  ← seller config lives here
+js/metrics.js         streaks, rates, momentum scores, grades, pairs, alerts
 js/charts.js          hand-rolled canvas line/spark charts
 js/feed.js            PubMed / HN / Wikipedia clients + cache + throttle
 js/command.js         command parser, palette, keyboard
 js/panels/*.js        dashboard, today, calendar, report, grade, research, habit, manage
-js/app.js             boot, routing, ticker tape, status bar
+js/app.js             boot, routing, toasts
 ```

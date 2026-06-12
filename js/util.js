@@ -2,9 +2,9 @@
 window.HT = window.HT || {};
 
 HT.util = (function () {
-  const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const MONTHS_FULL = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -15,8 +15,8 @@ HT.util = (function () {
   function weekday(k) { return parseKey(k).getDay(); }
   function daysBetween(a, b) { return Math.round((parseKey(b) - parseKey(a)) / 86400000); }
   function monthLabel(k) { const d = parseKey(k); return MONTHS_FULL[d.getMonth()] + ' ' + d.getFullYear(); }
-  function shortDate(k) { const d = parseKey(k); return MONTHS[d.getMonth()] + pad2(d.getDate()); }
-  function longDate(k) { const d = parseKey(k); return WD[d.getDay()] + ' ' + MONTHS[d.getMonth()] + ' ' + pad2(d.getDate()) + ' ' + d.getFullYear(); }
+  function shortDate(k) { const d = parseKey(k); return MONTHS[d.getMonth()] + ' ' + d.getDate(); }
+  function longDate(k) { const d = parseKey(k); return WD[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear(); }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
@@ -31,7 +31,7 @@ HT.util = (function () {
     const v = x.toFixed(d == null ? 1 : d);
     return (x >= 0 ? '+' : '') + v + (suf || '');
   }
-  function arrow(x) { return x > 0.0001 ? '▲' : x < -0.0001 ? '▼' : '◆'; }
+  function arrow(x) { return x > 0.0001 ? '↑' : x < -0.0001 ? '↓' : '·'; }
   function udClass(x) { return x > 0.0001 ? 'up' : x < -0.0001 ? 'dn' : 'dim'; }
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -50,11 +50,11 @@ HT.util = (function () {
     const t = typeof iso === 'number' ? iso : Date.parse(iso);
     if (isNaN(t)) return '';
     const m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    if (m < 60) return m + 'M AGO';
+    if (m < 60) return m + 'm ago';
     const h = Math.round(m / 60);
-    if (h < 24) return h + 'H AGO';
+    if (h < 24) return h + 'h ago';
     const d = Math.round(h / 24);
-    if (d < 30) return d + 'D AGO';
+    if (d < 30) return d + 'd ago';
     const dt = new Date(t);
     return MONTHS[dt.getMonth()] + ' ' + dt.getFullYear();
   }

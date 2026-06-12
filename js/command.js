@@ -7,72 +7,83 @@ HT.command = (function () {
   let palItems = [], palIdx = -1;
 
   const CMDS = [
-    { c: 'DASH', d: 'Dashboard — index, alerts, movers, intel', run: () => HT.app.navigate('dash') },
-    { c: 'TODAY', d: "Today's book — fill your orders", run: () => HT.app.navigate('today') },
-    { c: 'CAL', d: 'Month calendar — inspect & backfill days', run: () => HT.app.navigate('cal') },
-    { c: 'RPT', d: 'Performance report', run: () => HT.app.navigate('rpt') },
-    { c: 'GRADE', d: 'Report card — grades, GPA, advice', run: () => HT.app.navigate('grade') },
-    { c: 'RES', d: 'Research terminal — RES <TICKER> for one desk', run: a => HT.app.navigate('res', a[0] || null) },
-    { c: 'HAB', d: 'Securities list — HAB <TICKER> for a tear sheet', run: a => HT.app.navigate('hab', a[0] || null) },
-    { c: 'ADD', d: 'List a new habit', run: () => HT.app.navigate('form') },
-    { c: 'EDIT', d: 'Amend a listing — EDIT <TICKER>', run: a => {
+    { c: 'DASH', d: 'Home — overview of everything', run: () => HT.app.navigate('dash') },
+    { c: 'TODAY', d: "Today's habits — check them off", run: () => HT.app.navigate('today') },
+    { c: 'CAL', d: 'Calendar — view & edit any day', run: () => HT.app.navigate('cal') },
+    { c: 'RPT', d: 'Stats — completion, weekdays, habit pairs', run: () => HT.app.navigate('rpt') },
+    { c: 'GRADE', d: 'Report card — grades & advice', run: () => HT.app.navigate('grade') },
+    { c: 'RES', d: 'Discover — research & ideas for a habit', run: a => HT.app.navigate('res', a[0] || null) },
+    { c: 'HAB', d: 'My habits — list, or one habit\'s details', run: a => HT.app.navigate('hab', a[0] || null) },
+    { c: 'ADD', d: 'Add a new habit', run: () => HT.app.navigate('form') },
+    { c: 'EDIT', d: 'Edit a habit — EDIT <code>', run: a => {
         const h = S.getHabit(a[0]);
         if (h) HT.app.navigate('form', h.id);
-        else HT.app.msg('UNKNOWN SECURITY: ' + (a[0] || '?'), 'err');
+        else HT.app.msg('No habit called "' + (a[0] || '?') + '".', 'err');
       } },
-    { c: 'DONE', d: 'Fill an order — DONE <TICKER> [QTY]', run: doneCmd },
-    { c: 'UNDO', d: "Cancel today's fill — UNDO <TICKER>", run: undoCmd },
-    { c: 'SET', d: 'Settings & data desk', run: () => HT.app.navigate('set') },
-    { c: 'HELP', d: 'Command reference & model notes', run: () => HT.app.navigate('help') },
-    { c: 'EXPORT', d: 'Download portfolio backup (JSON)', run: () => {
+    { c: 'DONE', d: 'Mark a habit done — DONE <code> [amount]', run: doneCmd },
+    { c: 'UNDO', d: "Un-check a habit for today — UNDO <code>", run: undoCmd },
+    { c: 'PREMIUM', d: 'Habiterm Premium — unlock everything', run: () => HT.app.navigate('premium') },
+    { c: 'SET', d: 'Settings & data', run: () => HT.app.navigate('set') },
+    { c: 'HELP', d: 'All commands & how the numbers work', run: () => HT.app.navigate('help') },
+    { c: 'EXPORT', d: 'Download a backup (JSON)', run: () => {
         U.download('habiterm-' + S.todayKey() + '.json', S.exportJSON());
-        HT.app.msg('PORTFOLIO EXPORTED.', 'ok');
+        HT.app.msg('Backup downloaded.', 'ok');
       } },
-    { c: 'IMPORT', d: 'Restore portfolio from JSON file', run: () => document.getElementById('importfile').click() },
-    { c: 'DEMO', d: 'Load demo portfolio (replaces current data)', run: () => {
-        if (S.habits().length && !confirm('LOAD DEMO PORTFOLIO?\nTHIS REPLACES YOUR CURRENT DATA.')) return;
+    { c: 'IMPORT', d: 'Restore from a backup file', run: () => document.getElementById('importfile').click() },
+    { c: 'DEMO', d: 'Load demo data (replaces current data)', run: () => {
+        if (S.habits().length && !confirm('Load the demo data?\nThis replaces your current habits and history.')) return;
         S.loadDemo();
         HT.app.applySettings();
-        HT.app.msg('DEMO PORTFOLIO LOADED — 6 SECURITIES, 120 SESSIONS OF TAPE.', 'ok');
+        HT.app.msg('Demo loaded — 6 habits with 120 days of history.', 'ok');
         HT.app.navigate('dash');
       } },
-    { c: 'REFRESH', d: 'Force-refresh research feeds', run: () => {
+    { c: 'REFRESH', d: 'Refresh the Discover feeds', run: () => {
         HT.panels.research.forceNext();
         if (HT.app.route().p === 'res') HT.app.render(); else HT.app.navigate('res');
-        HT.app.msg('FEEDS REFRESHING…', 'info');
+        HT.app.msg('Refreshing feeds…', 'info');
       } },
-    { c: 'WIPE', d: 'Erase all HABITERM data', run: () => {
-        if (!confirm('ERASE ALL HABITERM DATA?\nTHIS CANNOT BE UNDONE. (EXPORT FIRST?)')) return;
+    { c: 'WIPE', d: 'Erase all Habiterm data', run: () => {
+        if (!confirm('Erase ALL Habiterm data?\nThis cannot be undone. (Maybe export a backup first?)')) return;
         S.wipe();
         HT.app.applySettings();
-        HT.app.msg('TAPE WIPED. FRESH START.', 'info');
+        HT.app.msg('Everything erased — fresh start.', 'info');
         HT.app.navigate('dash');
       } }
   ];
-  const ALIAS = { HOME: 'DASH', NEWS: 'RES', LIST: 'HAB', SECURITIES: 'HAB', '?': 'HELP', SETTINGS: 'SET' };
+  const ALIAS = { HOME: 'DASH', NEWS: 'RES', LIST: 'HAB', HABITS: 'HAB', STATS: 'RPT',
+                  DISCOVER: 'RES', NEW: 'ADD', '?': 'HELP', SETTINGS: 'SET',
+                  UPGRADE: 'PREMIUM', PRO: 'PREMIUM', BUY: 'PREMIUM' };
   const TICKER_CMDS = ['DONE', 'UNDO', 'HAB', 'RES', 'EDIT'];
+
+  function perfectDay(key) {
+    const dc = HT.metrics.dayCompletion(key);
+    return dc.due > 0 && dc.filled === dc.due;
+  }
 
   function doneCmd(a) {
     const h = S.getHabit(a[0]);
-    if (!h) { HT.app.msg('UNKNOWN SECURITY: ' + (a[0] || '?'), 'err'); return; }
+    if (!h) { HT.app.msg('No habit called "' + (a[0] || '?') + '".', 'err'); return; }
     const today = S.todayKey();
     const tgt = HT.metrics.target(h);
+    const wasPerfect = perfectDay(today);
     if (h.type === 'qty' && a[1] && !isNaN(+a[1])) {
       S.logAdd(h.id, today, +a[1]);
       const v = S.getValue(h.id, today);
-      HT.app.msg('ORDER: ' + h.ticker + ' +' + (+a[1]) + ' → ' + v + '/' + tgt + (v >= tgt ? ' — FILLED ✓' : ''), v >= tgt ? 'ok' : 'info');
+      HT.app.msg(h.name + ' +' + (+a[1]) + ' → ' + v + '/' + tgt + (v >= tgt ? ' — done ✓' : ''), v >= tgt ? 'ok' : 'info');
     } else {
       S.logSet(h.id, today, Math.max(tgt, S.getValue(h.id, today)));
-      HT.app.msg('ORDER FILLED: ' + h.ticker + ' ✓' + (HT.metrics.streak(h) > 1 ? ' — STREAK ' + HT.metrics.streak(h) + 'D' : ''), 'ok');
+      const st = HT.metrics.streak(h);
+      HT.app.msg(h.name + ' done ✓' + (st > 1 ? ' — ' + st + '-day streak!' : ''), 'ok');
     }
+    if (!wasPerfect && perfectDay(today)) HT.app.celebrate();
     HT.app.render();
   }
 
   function undoCmd(a) {
     const h = S.getHabit(a[0]);
-    if (!h) { HT.app.msg('UNKNOWN SECURITY: ' + (a[0] || '?'), 'err'); return; }
+    if (!h) { HT.app.msg('No habit called "' + (a[0] || '?') + '".', 'err'); return; }
     S.logSet(h.id, S.todayKey(), 0);
-    HT.app.msg('ORDER CANCELLED: ' + h.ticker, 'info');
+    HT.app.msg('Unchecked ' + h.name + ' for today.', 'info');
     HT.app.render();
   }
 
@@ -90,10 +101,10 @@ HT.command = (function () {
     hi = hist.length;
 
     if (cmd) { cmd.run(tokens.slice(1)); return; }
-    /* bloomberg move: a bare ticker jumps to the tear sheet */
+    /* a bare habit code jumps straight to its detail page */
     const h = S.getHabit(c);
     if (h) { HT.app.navigate('hab', h.ticker); return; }
-    HT.app.msg('UNKNOWN COMMAND: ' + c + ' — TYPE HELP <GO>', 'err');
+    HT.app.msg('Unknown command: ' + c + ' — type "help" to see them all.', 'err');
   }
 
   /* ---------- palette ---------- */
@@ -109,7 +120,7 @@ HT.command = (function () {
       CMDS.forEach(x => { if (x.c.indexOf(t) === 0) out.push({ ins: x.c, cmd: x.c, desc: x.d }); });
       S.habits().forEach(h => {
         if (h.ticker.indexOf(t) === 0 || h.name.toUpperCase().indexOf(t) === 0) {
-          out.push({ ins: h.ticker, cmd: h.ticker, desc: h.name + ' — open tear sheet' });
+          out.push({ ins: h.ticker, cmd: h.ticker, desc: h.name + ' — open details' });
         }
       });
     } else if (TICKER_CMDS.indexOf(tokens[0]) >= 0) {

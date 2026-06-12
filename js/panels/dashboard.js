@@ -1,10 +1,19 @@
-/* HABITERM — panels/dashboard.js : the home screen — index, alerts, book, movers, heat, intel */
+/* HABITERM — panels/dashboard.js : the home screen — momentum, alerts, today, trends, activity, articles */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
 HT.panels.dashboard = (function () {
   const U = HT.util, S = HT.store, M = HT.metrics, C = HT.charts;
   let wireTok = 0;
+
+  /* small completion donut for panel headers */
+  function ring(dc) {
+    const pct = dc.due ? Math.round(dc.filled / dc.due * 100) : 0;
+    return '<svg width="20" height="20" viewBox="0 0 36 36" style="transform:rotate(-90deg)" aria-hidden="true">' +
+      '<circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--bd)" stroke-width="5"/>' +
+      '<circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--up)" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + pct + ',100"/>' +
+      '</svg>';
+  }
 
   function render(root) {
     const hs = S.habits();
@@ -25,39 +34,40 @@ HT.panels.dashboard = (function () {
     root.innerHTML =
       '<div class="grid">' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>HABIX — COMPOSITE INDEX</span><span class="ph-aux">30D</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Momentum</span><span class="ph-aux">last 30 days</span></div>' +
       '<div class="panel-b">' +
-        '<div class="hero-num num">' + hxLast.toFixed(2) + '</div>' +
+        '<div class="hero-num num">' + hxLast.toFixed(1) + '</div>' +
         '<div class="hero-sub num">' +
-          '<span class="' + U.udClass(d1) + '">' + U.arrow(d1) + ' ' + U.signed(d1, 2, '%') + ' 1D</span>' +
+          '<span class="' + U.udClass(d1) + '">' + U.arrow(d1) + ' ' + U.signed(d1, 1, '%') + ' today</span>' +
           ' <span class="dim">·</span> ' +
-          '<span class="' + U.udClass(d7) + '">' + U.signed(d7, 1, '%') + ' 7D</span>' +
+          '<span class="' + U.udClass(d7) + '">' + U.signed(d7, 1, '%') + ' this week</span>' +
         '</div>' +
-        '<canvas class="chart" id="db-hx" style="margin-top:8px"></canvas>' +
-        '<div class="kv" style="margin-top:10px">' +
-          '<span class="k">PORTFOLIO GPA</span><span class="v num">' + (gpa == null ? 'NR' : gpa.toFixed(2)) + '</span>' +
-          '<span class="k">SESSION FILLS</span><span class="v num">' + dc.filled + ' / ' + dc.due + '</span>' +
-          '<span class="k">SECURITIES</span><span class="v num">' + hs.length + ' LISTED</span>' +
+        '<canvas class="chart" id="db-hx" style="margin-top:10px"></canvas>' +
+        '<div class="kv" style="margin-top:12px">' +
+          '<span class="k">Grade average</span><span class="v num">' + (gpa == null ? '—' : gpa.toFixed(2) + ' GPA') + '</span>' +
+          '<span class="k">Done today</span><span class="v num">' + dc.filled + ' of ' + dc.due + '</span>' +
+          '<span class="k">Active habits</span><span class="v num">' + hs.length + '</span>' +
         '</div>' +
       '</div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>ALERTS</span><span class="ph-aux">' + alerts.length + ' ACTIVE</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Heads up</span><span class="ph-aux">' + alerts.length + '</span></div>' +
       '<div class="panel-b" id="db-alerts"></div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>TODAY&#39;S BOOK</span>' +
-      '<span class="ph-aux"><button class="btn btn-sm" data-cmd="TODAY">EXPAND</button></span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Today</span>' +
+      '<span class="ph-aux">' + ring(dc) + '<span class="num">' + dc.filled + ' of ' + dc.due + '</span>' +
+      '<button class="btn btn-sm" data-cmd="TODAY">Open</button></span></div>' +
       '<div class="panel-b" id="db-book"></div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>TOP MOVERS</span><span class="ph-aux">7D PRICE Δ</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Trending</span><span class="ph-aux">7-day change</span></div>' +
       '<div class="panel-b" id="db-movers"></div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>ACTIVITY</span><span class="ph-aux">LAST 35 SESSIONS</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Activity</span><span class="ph-aux">last 35 days</span></div>' +
       '<div class="panel-b"><div class="heatwrap" id="db-heat"></div>' +
-      '<div class="dim" style="font-size:10px;margin-top:6px">FILL INTENSITY — CLICK A CELL FOR THE DAY VIEW</div></div></div>' +
+      '<div class="dim" style="font-size:11.5px;margin-top:8px">Darker = more done · click a square to open that day</div></div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>LATEST INTEL</span>' +
-      '<span class="ph-aux"><button class="btn btn-sm" data-cmd="RES">OPEN RES</button></span></div>' +
-      '<div class="panel-b" id="db-wire"><div class="feed-status blink">PULLING THE WIRE…</div></div></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Worth a read</span>' +
+      '<span class="ph-aux"><button class="btn btn-sm" data-cmd="RES">Discover more</button></span></div>' +
+      '<div class="panel-b" id="db-wire"><div class="feed-status blink">Loading articles…</div></div></div>' +
 
       '</div>';
 
@@ -68,48 +78,47 @@ HT.panels.dashboard = (function () {
     /* alerts */
     const al = root.querySelector('#db-alerts');
     if (!alerts.length) {
-      al.innerHTML = '<div class="dim" style="padding:6px 2px">NO ACTIVE ALERTS — CLEAN TAPE.</div>';
+      al.innerHTML = '<div class="dim" style="padding:6px 2px">All quiet — nothing needs your attention. ✨</div>';
     } else {
       const cls = { red: 'al-red', yel: 'al-yel', grn: 'al-grn' };
-      const lab = { red: 'ALRT', yel: 'WARN', grn: 'GOOD' };
+      const lab = { red: 'Alert', yel: 'Watch', grn: 'Nice' };
       al.innerHTML = alerts.map(a =>
         '<div class="alert-row"><span class="al-flag ' + cls[a.sev] + '">' + lab[a.sev] + '</span>' +
         '<span>' + U.esc(a.text) + '</span></div>').join('');
     }
 
-    /* quick book */
+    /* today's quick list */
     const book = root.querySelector('#db-book');
     const due = hs.filter(h => M.isScheduled(h, today));
     if (!due.length) {
-      book.innerHTML = '<div class="dim" style="padding:6px 2px">NOTHING IN SESSION TODAY — REST DAY.</div>';
+      book.innerHTML = '<div class="dim" style="padding:6px 2px">Nothing scheduled today — rest day. 🌴</div>';
     } else {
       due.slice(0, 8).forEach(h => book.appendChild(HT.panels.today.row(h, today, { compact: true })));
       if (due.length > 8) {
         const more = document.createElement('div');
         more.className = 'dim';
-        more.style.cssText = 'font-size:10px;padding:4px 2px';
-        more.textContent = '+' + (due.length - 8) + ' MORE — OPEN TODAY';
+        more.style.cssText = 'font-size:11.5px;padding:6px 2px';
+        more.textContent = '+' + (due.length - 8) + ' more — open Today to see them all';
         book.appendChild(more);
       }
     }
 
-    /* movers */
+    /* trending */
     const mvEl = root.querySelector('#db-movers');
     const top = mv.slice(0, 3);
     const bot = mv.slice(-3).reverse().filter(x => top.indexOf(x) < 0);
     function mvRow(x) {
       return '<tr class="rowlink" data-cmd="HAB ' + U.esc(x.h.ticker) + '">' +
-        '<td><span class="tkr-dot" style="background:' + x.h.color + '"></span><span class="tkr">' + U.esc(x.h.ticker) + '</span></td>' +
-        '<td class="dim">' + U.esc(x.h.name) + '</td>' +
+        '<td><span class="tkr-dot" style="background:' + x.h.color + '"></span><span class="tkr">' + U.esc(x.h.name) + '</span></td>' +
         '<td class="r num">' + M.price(x.h).toFixed(1) + '</td>' +
         '<td class="r num ' + U.udClass(x.d7) + '">' + U.arrow(x.d7) + ' ' + U.signed(x.d7, 1, '%') + '</td></tr>';
     }
-    mvEl.innerHTML = '<table class="tbl"><thead><tr><th>SEC</th><th>NAME</th><th class="r">LAST</th><th class="r">7D</th></tr></thead>' +
+    mvEl.innerHTML = '<table class="tbl"><thead><tr><th>Habit</th><th class="r">Score</th><th class="r">7 days</th></tr></thead>' +
       '<tbody>' + top.map(mvRow).join('') +
-      (bot.length ? '<tr><td colspan="4" class="dim" style="font-size:9px;letter-spacing:2px">LAGGARDS</td></tr>' + bot.map(mvRow).join('') : '') +
+      (bot.length ? '<tr><td colspan="3" class="dim" style="font-size:11px;font-weight:600">Needs attention</td></tr>' + bot.map(mvRow).join('') : '') +
       '</tbody></table>';
 
-    /* 35-day heat grid */
+    /* 35-day activity grid */
     const heat = root.querySelector('#db-heat');
     const acc = C.accent();
     for (let i = 34; i >= 0; i--) {
@@ -119,30 +128,30 @@ HT.panels.dashboard = (function () {
       const cdc = M.dayCompletion(k);
       if (cdc.due > 0) {
         cell.style.background = (cdc.frac === 0 && k !== today)
-          ? 'rgba(255,79,67,.10)'
-          : C.hexA(acc, 0.05 + 0.38 * cdc.frac);
+          ? 'rgba(226,60,82,.10)'
+          : C.hexA(acc, 0.08 + 0.55 * cdc.frac);
       }
       if (k === today) cell.style.borderColor = acc;
-      cell.title = U.shortDate(k) + ' — ' + Math.round(cdc.frac * 100) + '% (' + cdc.filled + '/' + cdc.due + ')';
+      cell.title = U.shortDate(k) + ' — ' + Math.round(cdc.frac * 100) + '% (' + cdc.filled + ' of ' + cdc.due + ')';
       cell.style.cursor = 'pointer';
       cell.onclick = () => HT.app.navigate('day', k);
       heat.appendChild(cell);
     }
 
-    /* intel preview (single cached query — full feeds live in RES) */
+    /* article preview (single cached query — full feeds live in Discover) */
     const myTok = ++wireTok;
     HT.feed.wire('habit', 5, false).then(r => {
       const el = root.querySelector('#db-wire');
       if (wireTok !== myTok || !el) return;
-      if (!r.items.length) { el.innerHTML = '<div class="feed-status">WIRE QUIET. OPEN RES FOR FULL COVERAGE.</div>'; return; }
+      if (!r.items.length) { el.innerHTML = '<div class="feed-status">Nothing new right now — check Discover for more.</div>'; return; }
       el.innerHTML = r.items.map((it, i) =>
-        '<div class="feed-item"><span class="fi-num">' + U.pad2(i + 1) + ')</span>' +
+        '<div class="feed-item"><span class="fi-num">' + (i + 1) + '</span>' +
         '<div class="fi-body"><div class="fi-title"><a href="' + U.esc(it.url) + '" target="_blank" rel="noopener">' + U.esc(it.title) + '</a></div>' +
         '<div class="fi-meta"><span class="fi-src">HN</span> · ▲' + it.points + ' · ' + U.relTime(it.at) + '</div></div></div>'
-      ).join('') + (r.cached ? '<div class="feed-status">CACHED ' + U.relTime(r.ts) + ' — OPEN RES TO REFRESH</div>' : '');
+      ).join('') + (r.cached ? '<div class="feed-status">Updated ' + U.relTime(r.ts) + ' — open Discover to refresh</div>' : '');
     }).catch(() => {
       const el = root.querySelector('#db-wire');
-      if (wireTok === myTok && el) el.innerHTML = '<div class="feed-status err">WIRE OFFLINE — CHECK CONNECTION. TRACKER UNAFFECTED.</div>';
+      if (wireTok === myTok && el) el.innerHTML = '<div class="feed-status err">Couldn\'t load articles — your tracker still works fine offline.</div>';
     });
   }
 

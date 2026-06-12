@@ -1,4 +1,4 @@
-/* HABITERM — panels/habit.js : securities list + full tear sheet per habit */
+/* HABITERM — panels/habit.js : habit list + detail page per habit */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
@@ -8,11 +8,11 @@ HT.panels.habit = (function () {
   function render(root, arg) {
     if (!arg) { renderList(root); return; }
     const h = S.getHabit(arg);
-    if (!h) { HT.app.msg('UNKNOWN SECURITY: ' + String(arg).toUpperCase(), 'err'); renderList(root); return; }
+    if (!h) { HT.app.msg('No habit called "' + String(arg) + '".', 'err'); renderList(root); return; }
     renderDetail(root, h);
   }
 
-  /* ---------- securities list ---------- */
+  /* ---------- habit list ---------- */
   function renderList(root) {
     const hs = S.habits();
     if (!hs.length) { HT.app.emptyState(root); return; }
@@ -26,32 +26,32 @@ HT.panels.habit = (function () {
     });
 
     root.innerHTML =
-      '<div class="panel"><div class="panel-h"><span>LISTED SECURITIES — ' + hs.length + '</span>' +
-      '<span class="ph-aux"><button class="btn btn-sm btn-acc" data-cmd="ADD">+ LIST NEW</button></span></div>' +
+      '<div class="panel"><div class="panel-h"><span>My habits</span>' +
+      '<span class="ph-aux">' + hs.length + ' · <button class="btn btn-sm btn-acc" data-cmd="ADD">+ New habit</button></span></div>' +
       '<div class="panel-b">' +
       '<table class="tbl"><thead><tr>' +
-      '<th>SEC</th><th>NAME</th><th class="r">LAST</th><th class="r">Δ7D</th><th class="r">STRK</th>' +
-      '<th class="r">FILL 30D</th><th class="r">GRADE</th><th>SCHEDULE</th><th>TYPE</th>' +
+      '<th>Habit</th><th class="r">Momentum</th><th class="r">7 days</th><th class="r">Streak</th>' +
+      '<th class="r">This month</th><th class="r">Grade</th><th>Schedule</th><th>Goal</th>' +
       '</tr></thead><tbody>' +
       rows.map(r =>
         '<tr class="rowlink" data-cmd="HAB ' + U.esc(r.h.ticker) + '">' +
-        '<td><span class="tkr-dot" style="background:' + r.h.color + '"></span><span class="tkr">' + U.esc(r.h.ticker) + '</span></td>' +
-        '<td class="dim">' + U.esc(r.h.name) + '</td>' +
-        '<td class="r num wht">' + r.price.toFixed(2) + '</td>' +
+        '<td><span class="tkr-dot" style="background:' + r.h.color + '"></span><span class="tkr">' + U.esc(r.h.name) + '</span>' +
+        '<span class="code-chip">' + U.esc(r.h.ticker) + '</span></td>' +
+        '<td class="r num wht">' + r.price.toFixed(1) + '</td>' +
         '<td class="r num ' + U.udClass(r.d7) + '">' + U.arrow(r.d7) + ' ' + U.signed(r.d7, 1, '%') + '</td>' +
-        '<td class="r num ' + (r.st > 0 ? 'acc' : 'dim') + '">' + r.st + 'D</td>' +
+        '<td class="r num">' + (r.st > 0 ? '🔥 ' + r.st : '—') + '</td>' +
         '<td class="r num">' + U.fmtPct(r.r30) + '</td>' +
         '<td class="r"><span class="g-' + r.g.letter[0] + '" style="font-weight:700">' + r.g.letter + '</span></td>' +
         '<td class="dim">' + M.scheduleDesc(r.h) + '</td>' +
-        '<td class="dim">' + (r.h.type === 'qty' ? r.h.target + ' ' + U.esc(r.h.unit || 'UNITS') : 'CHECK') + '</td>' +
+        '<td class="dim">' + (r.h.type === 'qty' ? r.h.target + ' ' + U.esc(r.h.unit || 'units') : '✓ check') + '</td>' +
         '</tr>'
       ).join('') +
       '</tbody></table>' +
-      '<div class="dim" style="font-size:10px;margin-top:8px;letter-spacing:1px">TIP: TYPE A TICKER IN THE COMMAND LINE AND HIT ENTER TO JUMP STRAIGHT TO ITS TEAR SHEET.</div>' +
+      '<div class="dim" style="font-size:11.5px;margin-top:10px">Tip: type a habit\'s short code in the search bar to jump straight to it.</div>' +
       '</div></div>';
   }
 
-  /* ---------- tear sheet ---------- */
+  /* ---------- habit detail ---------- */
   function renderDetail(root, h) {
     const today = S.todayKey();
     const ps = M.priceSeries(h, 90);
@@ -65,54 +65,55 @@ HT.panels.habit = (function () {
     M.priceSeries(h).forEach(p => { if (p.p > ath) ath = p.p; });
     const doneToday = M.done(h, today);
     const schedToday = M.isScheduled(h, today);
+    const OUTLOOK = { POSITIVE: 'improving', NEGATIVE: 'slipping', STABLE: 'steady', NEW: 'new' };
 
     root.innerHTML =
       '<div class="grid">' +
 
       '<div class="panel col-12"><div class="panel-h">' +
-      '<span><span class="tkr-dot" style="background:' + h.color + '"></span>' + U.esc(h.ticker) + ' — ' + U.esc(h.name.toUpperCase()) +
-      ' <span class="dim" style="font-weight:400">· ' + M.scheduleDesc(h) +
-      (h.type === 'qty' ? ' · TARGET ' + h.target + ' ' + U.esc(h.unit || 'UNITS') : '') +
-      ' · LISTED ' + U.shortDate(h.createdAt) + '</span></span>' +
+      '<span><span class="tkr-dot" style="background:' + h.color + '"></span>' + U.esc(h.name) +
+      '<span class="code-chip">' + U.esc(h.ticker) + '</span>' +
+      ' <span class="dim" style="font-weight:400;font-size:12.5px">· ' + M.scheduleDesc(h) +
+      (h.type === 'qty' ? ' · goal ' + h.target + ' ' + U.esc(h.unit || 'units') : '') +
+      ' · since ' + U.shortDate(h.createdAt) + '</span></span>' +
       '<span class="ph-aux">' +
         (schedToday ? '<button class="btn btn-sm ' + (doneToday ? '' : 'btn-acc') + '" data-cmd="' + (doneToday ? 'UNDO ' : 'DONE ') + U.esc(h.ticker) + '">' +
-          (doneToday ? 'CANCEL TODAY' : '✓ FILL TODAY') + '</button>' : '<span class="tag tag-off">OFF TODAY</span>') +
-        '<button class="btn btn-sm" data-cmd="RES ' + U.esc(h.ticker) + '">RESEARCH</button>' +
-        '<button class="btn btn-sm" data-cmd="EDIT ' + U.esc(h.ticker) + '">EDIT</button>' +
-        '<button class="btn btn-sm btn-dn" id="hb-delist">DELIST</button>' +
+          (doneToday ? 'Undo today' : '✓ Done today') + '</button>' : '<span class="tag tag-off">Off today</span>') +
+        '<button class="btn btn-sm" data-cmd="RES ' + U.esc(h.ticker) + '">Discover</button>' +
+        '<button class="btn btn-sm" data-cmd="EDIT ' + U.esc(h.ticker) + '">Edit</button>' +
+        '<button class="btn btn-sm btn-dn" id="hb-delist">Delete</button>' +
       '</span></div>' +
       '<div class="panel-b">' +
-        '<div class="inline" style="gap:24px;align-items:baseline">' +
-          '<span class="hero-num num">' + price.toFixed(2) + '</span>' +
-          '<span class="num ' + U.udClass(d1) + '">' + U.arrow(d1) + ' ' + U.signed(d1, 2, '%') + ' 1D</span>' +
-          '<span class="num ' + U.udClass(d7) + '">' + U.signed(d7, 1, '%') + ' 7D</span>' +
-          '<span class="num ' + U.udClass(d30) + '">' + U.signed(d30, 1, '%') + ' 30D</span>' +
-          '<span class="dim">MOMENTUM PRICE — FILLS COMPOUND UP, MISSES BLEED DOWN. BASE 100.</span>' +
+        '<div class="inline" style="gap:20px;align-items:baseline">' +
+          '<span class="hero-num num">' + price.toFixed(1) + '</span>' +
+          '<span class="num ' + U.udClass(d1) + '">' + U.arrow(d1) + ' ' + U.signed(d1, 1, '%') + ' today</span>' +
+          '<span class="num ' + U.udClass(d7) + '">' + U.signed(d7, 1, '%') + ' 7d</span>' +
+          '<span class="num ' + U.udClass(d30) + '">' + U.signed(d30, 1, '%') + ' 30d</span>' +
+          '<span class="dim" style="font-size:12px">Momentum score — doing it pushes the score up, missing pulls it down. Starts at 100.</span>' +
         '</div>' +
-        '<canvas class="chart" id="hb-chart" style="margin-top:10px"></canvas>' +
+        '<canvas class="chart" id="hb-chart" style="margin-top:12px"></canvas>' +
       '</div></div>' +
 
-      '<div class="panel col-8"><div class="panel-h"><span>VITALS</span></div><div class="panel-b">' +
+      '<div class="panel col-8"><div class="panel-h"><span>Stats</span></div><div class="panel-b">' +
         '<div class="statgrid">' +
-        '<div class="stat"><div class="s-k">STREAK</div><div class="s-v num acc">' + st + 'D</div><div class="s-x">BEST ' + best + 'D</div></div>' +
-        '<div class="stat"><div class="s-k">FILL 7D</div><div class="s-v num">' + U.fmtPct(r7) + '</div></div>' +
-        '<div class="stat"><div class="s-k">FILL 30D</div><div class="s-v num">' + U.fmtPct(r30) + '</div></div>' +
-        '<div class="stat"><div class="s-k">FILL 90D</div><div class="s-v num">' + U.fmtPct(r90) + '</div></div>' +
-        '<div class="stat"><div class="s-k">LIFETIME</div><div class="s-v num">' + U.fmtPct(rAll) + '</div><div class="s-x">' + w.filled + '/' + w.due + ' ORDERS</div></div>' +
-        '<div class="stat"><div class="s-k">ATH PRICE</div><div class="s-v num">' + ath.toFixed(1) + '</div></div>' +
-        '<div class="stat"><div class="s-k">VOLATILITY</div><div class="s-v num">' + M.volatility(h).toFixed(2) + '</div><div class="s-x">30D σ OF RETURNS</div></div>' +
+        '<div class="stat"><div class="s-k">Streak</div><div class="s-v num">' + (st > 0 ? '🔥 ' + st : '—') + '</div><div class="s-x">best ' + best + '</div></div>' +
+        '<div class="stat"><div class="s-k">This week</div><div class="s-v num">' + U.fmtPct(r7) + '</div></div>' +
+        '<div class="stat"><div class="s-k">This month</div><div class="s-v num">' + U.fmtPct(r30) + '</div></div>' +
+        '<div class="stat"><div class="s-k">90 days</div><div class="s-v num">' + U.fmtPct(r90) + '</div></div>' +
+        '<div class="stat"><div class="s-k">All time</div><div class="s-v num">' + U.fmtPct(rAll) + '</div><div class="s-x">' + w.filled + ' of ' + w.due + ' days</div></div>' +
+        '<div class="stat"><div class="s-k">Peak score</div><div class="s-v num">' + ath.toFixed(1) + '</div></div>' +
         '</div>' +
-        '<div class="section-title">LAST 90 SESSIONS</div>' +
+        '<div class="section-title">Last 90 days</div>' +
         '<div class="dots" id="hb-strip" style="gap:3px"></div>' +
       '</div></div>' +
 
       '<div class="col-4">' +
-        '<div class="panel"><div class="panel-h"><span>RATING</span></div><div class="panel-b">' +
+        '<div class="panel"><div class="panel-h"><span>Grade</span></div><div class="panel-b">' +
         '<div class="inline" style="gap:16px"><span class="grade-letter g-' + g.letter[0] + '">' + g.letter + '</span>' +
-        '<span class="dim" style="font-size:11px">' + (g.score == null ? 'NOT RATED' : g.score.toFixed(1) + ' / 100 · OUTLOOK ' + g.outlook) + '</span></div>' +
-        '<div class="gc-advice" style="margin-top:8px">▍' + U.esc(g.advice) + '</div>' +
+        '<span class="dim" style="font-size:12.5px">' + (g.score == null ? 'Not graded yet' : g.score.toFixed(1) + ' / 100 · ' + (OUTLOOK[g.outlook] || g.outlook)) + '</span></div>' +
+        '<div class="gc-advice" style="margin-top:10px">' + U.esc(g.advice) + '</div>' +
         '</div></div>' +
-        '<div class="panel" style="margin-top:8px"><div class="panel-h"><span>RECENT TAPE</span><span class="ph-aux">CLICK TO AMEND</span></div>' +
+        '<div class="panel" style="margin-top:14px"><div class="panel-h"><span>History</span><span class="ph-aux">click a day to edit</span></div>' +
         '<div class="panel-b" id="hb-log"></div></div>' +
       '</div>' +
 
@@ -122,7 +123,7 @@ HT.panels.habit = (function () {
       ps.map(p => ({ v: p.p, k: U.shortDate(p.key) })),
       { height: 190, base: 100, color: h.color, yfmt: x => x.toFixed(0) });
 
-    /* 90-session strip */
+    /* 90-day strip */
     const strip = root.querySelector('#hb-strip');
     for (let i = 89; i >= 0; i--) {
       const k = U.addDays(today, -i);
@@ -131,20 +132,20 @@ HT.panels.habit = (function () {
       cell.style.width = '10px';
       cell.style.height = '10px';
       if (k < h.createdAt || !M.isScheduled(h, k)) {
-        cell.style.background = '#17170f';
+        cell.classList.add('sq-off');
       } else if (M.done(h, k)) {
         cell.style.background = h.color;
       } else if (k === today) {
         cell.style.background = 'transparent';
         cell.style.border = '1px solid ' + h.color;
       } else {
-        cell.style.background = '#3a1512';
+        cell.classList.add('sq-miss');
       }
       cell.title = U.shortDate(k);
       strip.appendChild(cell);
     }
 
-    /* recent tape: last 14 scheduled sessions, click to toggle (backfill) */
+    /* history: last 14 scheduled days, click to open & edit */
     const log = root.querySelector('#hb-log');
     const items = [];
     let k = today;
@@ -156,9 +157,9 @@ HT.panels.habit = (function () {
     log.innerHTML = '<table class="tbl"><tbody>' + items.map(key => {
       const v = S.getValue(h.id, key);
       const isDone = v >= M.target(h);
-      const stat = isDone ? '<span class="up">FILLED' + (h.type === 'qty' ? ' ' + v : '') + '</span>'
-        : v > 0 ? '<span class="acc">PARTIAL ' + v + '/' + h.target + '</span>'
-        : key === today ? '<span class="dim blink">OPEN</span>' : '<span class="dn">MISSED</span>';
+      const stat = isDone ? '<span class="up">Done' + (h.type === 'qty' ? ' · ' + v : '') + '</span>'
+        : v > 0 ? '<span class="acc">' + v + ' of ' + h.target + '</span>'
+        : key === today ? '<span class="dim">Open</span>' : '<span class="dn">Missed</span>';
       return '<tr class="rowlink" data-day="' + key + '"><td class="dim">' + U.shortDate(key) + '</td>' +
         '<td>' + U.WD[U.weekday(key)] + '</td><td class="r">' + stat + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -167,9 +168,9 @@ HT.panels.habit = (function () {
     });
 
     root.querySelector('#hb-delist').onclick = () => {
-      if (confirm('DELIST ' + h.ticker + ' (' + h.name + ')?\nALL OF ITS TAPE IS ERASED. THIS CANNOT BE UNDONE.')) {
+      if (confirm('Delete "' + h.name + '"?\nAll of its history will be erased. This cannot be undone.')) {
         S.deleteHabit(h.id);
-        HT.app.msg('DELISTED: ' + h.ticker, 'info');
+        HT.app.msg('Deleted ' + h.name + '.', 'info');
         HT.app.navigate('hab');
       }
     };
