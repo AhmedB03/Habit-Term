@@ -51,7 +51,7 @@ HT.panels.research = (function () {
       hs.map(h => '<button class="btn btn-sm' + (cur && cur.id === h.id ? ' btn-acc' : '') + '" data-res="' + U.esc(h.ticker) + '">' + U.esc(h.name) + '</button>').join('') +
       '<span style="flex:1"></span>' +
       '<button class="btn btn-sm" id="res-refresh" title="Skip the 6-hour cache">↻ Refresh</button>' +
-      (cur ? '<button class="btn btn-sm" data-cmd="EDIT ' + U.esc(cur.ticker) + '" title="Edit this habit\'s search keywords">Edit keywords</button>' : '') +
+      (cur ? '<button class="btn btn-sm" data-cmd="EDIT ' + U.esc(cur.ticker) + '" title="Edit this habit\'s skills & keywords">✎ Edit</button>' : '') +
       '</div>';
 
     root.innerHTML =
@@ -67,13 +67,13 @@ HT.panels.research = (function () {
           '<div id="res-gear" class="chips"></div>'
         : '<div class="dim" style="font-size:12.5px;margin:2px 0 6px">Pick a habit above to see its latest apps, tools and gear.</div>') +
       '<div class="grid" style="margin-top:14px">' +
-      '<div class="col-6"><div class="section-title">🔬 Latest research</div>' +
-      '<div id="res-studies"><div class="feed-status blink">Loading studies…</div></div></div>' +
+      '<div class="col-6"><div class="section-title">🧠 Research by skill' +
+        (cur ? ' <a class="skills-edit" href="#" data-cmd="EDIT ' + U.esc(cur.ticker) + '">✎ edit skills</a>' : '') + '</div>' +
+        (cur ? '<div class="dim" style="font-size:11.5px;margin:-2px 0 10px">The science behind what this habit trains, not just its name.</div>' : '') +
+        '<div id="res-studies"><div class="feed-status blink">Loading research…</div></div></div>' +
       '<div class="col-6"><div class="section-title">💬 Launches & discussion</div>' +
       '<div id="res-wire"><div class="feed-status blink">Loading discussions…</div></div></div>' +
       '</div>' +
-      (cur && cur.keywords ? '<div class="dim" style="font-size:11.5px;margin-top:12px">Searching for: ' +
-        U.esc(cur.keywords.join(' · ')) + '</div>' : '') +
       '</div></div>';
 
     root.querySelectorAll('[data-res]').forEach(b => {
@@ -82,6 +82,33 @@ HT.panels.research = (function () {
     root.querySelector('#res-refresh').onclick = () => { force = true; HT.app.render(); };
 
     loadFeeds(root, cur, myTok, f);
+  }
+
+  /* one skill = a heading (label + why) over its own relevance-ranked studies */
+  function facetSkeleton(facets) {
+    return facets.map((fc, i) =>
+      '<div class="facet-block">' +
+        '<div class="facet-head"><span class="facet-name">' + U.esc(fc.label) + '</span>' +
+        (fc.why ? '<span class="facet-why">' + U.esc(fc.why) + '</span>' : '') +
+        (fc.generic ? '<span class="facet-why">(add specific skills via ✎ edit)</span>' : '') + '</div>' +
+        '<div class="facet-items" data-fac="' + i + '"><div class="feed-status blink">Searching…</div></div>' +
+      '</div>'
+    ).join('');
+  }
+
+  function fillFacet(root, i, fc, myTok, f) {
+    F.studies(fc.q, 4, f).then(r => {
+      if (tok !== myTok) return;
+      const el = root.querySelector('.facet-items[data-fac="' + i + '"]');
+      if (!el) return;
+      el.innerHTML = r.items.length
+        ? r.items.map((it, j) => studyItem(it, j, false)).join('')
+        : '<div class="feed-status">No studies found for this skill yet.</div>';
+    }).catch(e => {
+      if (tok !== myTok) return;
+      const el = root.querySelector('.facet-items[data-fac="' + i + '"]');
+      if (el) el.innerHTML = '<div class="feed-status err">Couldn\'t reach PubMed (' + U.esc(e.message || 'network') + ').</div>';
+    });
   }
 
   function appCard(a) {
@@ -144,25 +171,30 @@ HT.panels.research = (function () {
       }).catch(() => { /* primer is optional garnish */ });
     }
 
-    /* studies */
+    /* studies — searched by the *skills* a habit trains, not its literal name */
     const stEl = root.querySelector('#res-studies');
-    try {
-      const per = cur ? 8 : 3;
-      const items = [];
-      let last = null;
-      for (const h of targets) {
-        const q = (h.keywords && h.keywords.length) ? h.keywords.join(' OR ') : h.name;
-        const r = await F.studies(q, per, f);
-        if (tok !== myTok) return;
-        last = r;
-        r.items.forEach(it => items.push(Object.assign({ tk: h.ticker }, it)));
+    if (cur) {
+      const facets = HT.topics.facetsFor(cur).slice(0, 4);
+      stEl.innerHTML = facetSkeleton(facets);
+      facets.forEach((fc, i) => fillFacet(root, i, fc, myTok, f));
+    } else {
+      try {
+        const items = [];
+        let last = null;
+        for (const h of targets) {
+          const fc = HT.topics.facetsFor(h)[0];
+          const r = await F.studies(fc.q, 3, f);
+          if (tok !== myTok) return;
+          last = r;
+          r.items.forEach(it => items.push(Object.assign({ tk: h.ticker }, it)));
+        }
+        stEl.innerHTML = items.length
+          ? items.map((it, i) => studyItem(it, i, showTk)).join('') + stamp(last)
+          : '<div class="feed-status">No studies yet — open a habit to explore the skills it builds.</div>';
+      } catch (e) {
+        if (tok === myTok) stEl.innerHTML =
+          '<div class="feed-status err">Couldn\'t reach PubMed (' + U.esc(e.message || 'network') + ') — your tracker still works. Hit Refresh to retry.</div>';
       }
-      stEl.innerHTML = items.length
-        ? items.map((it, i) => studyItem(it, i, showTk)).join('') + stamp(last)
-        : '<div class="feed-status">No recent studies for these keywords — try broader ones via Edit keywords.</div>';
-    } catch (e) {
-      if (tok === myTok) stEl.innerHTML =
-        '<div class="feed-status err">Couldn\'t reach PubMed (' + U.esc(e.message || 'network') + ') — your tracker still works. Hit Refresh to retry.</div>';
     }
 
     /* products & discussion */

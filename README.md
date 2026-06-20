@@ -24,7 +24,7 @@ every page lights up immediately. Erase it from Settings when you're ready to tr
 | Calendar | `CAL` (F3) | Month grid with completion heat + per-habit dots; click any past day to view & edit |
 | Stats | `RPT` (F4) | 7/30/90-day completion with deltas, weekday analysis, habit-pair matrix |
 | Grades | `GRADE` (F6) | Letter grade per habit (A+…F), overall GPA, outlook, friendly advice |
-| Discover | `RES [code]` (F7) | **Live feeds per habit**: latest apps & tools (App Store), gear links, PubMed studies, Hacker News launches/discussion, Wikipedia primer |
+| Discover | `RES [code]` (F7) | **Per habit**: latest apps & tools (App Store), gear links, **research grouped by the skills the habit trains**, Hacker News launches/discussion, Wikipedia primer |
 | Habits | `HAB [code]` (F8) | All habits, or one habit's full detail: score chart, stats, history |
 | Premium | `PREMIUM` | Plans, license activation, free-vs-premium comparison |
 
@@ -71,6 +71,21 @@ Light/dark theme · accent color (violet/orange/green/blue/pink) · day rollover
 (night owls: set 3:00 and 1 a.m. still counts as "today") · week start · data
 (export/import/demo/erase).
 
+## Research by skill 🧠
+
+PubMed is a biomedical database, so searching it for a hobby ("solve a Rubik's cube")
+returns noise. Discover instead searches for the **skills the habit trains**: a Rubik's
+cube maps to *spatial reasoning* (`"mental rotation"[tiab]…`), *pattern recognition*
+(`"sequence learning"[tiab]…`) and *working memory*, each shown as its own group of
+relevance-ranked studies.
+
+The mapping lives in `js/topics.js` — a concept dictionary of signal words → skill
+facets, each with a tight Title/Abstract PubMed query. It's a best-effort starting
+point, so every habit's skills are **editable** in the add/edit form ("Skills this
+builds" — auto-suggested, add/remove your own). Saved habits keep the skills you chose;
+unedited ones always reflect the latest map. Unmapped habits fall back to one honest
+scoped search.
+
 ## Premium & making money 💸
 
 Habiterm ships with two revenue streams, both wired and ready:
@@ -113,6 +128,7 @@ css/terminal.css      design system: themes, layout, components
 js/util.js            dates (local, DST-safe keys), formatting
 js/store.js           state, persistence, demo data
 js/premium.js         plans, trial, license keys, upgrade page  ← seller config lives here
+js/topics.js          habit → skill/topic map that drives "Research by skill"
 js/metrics.js         streaks, rates, momentum scores, grades, pairs, alerts
 js/charts.js          hand-rolled canvas line/spark charts
 js/feed.js            PubMed / HN / Wikipedia clients + cache + throttle

@@ -80,6 +80,7 @@ HT.store = (function () {
         ? { kind: 'weekdays', days: (spec.schedule.days || []).slice().sort() }
         : { kind: 'daily', days: [] },
       keywords: (spec.keywords && spec.keywords.length) ? spec.keywords : [String(spec.name || '').toLowerCase()],
+      facets: (spec.facets && spec.facets.length) ? spec.facets : null,
       color: spec.color || COLORS[state.habits.length % COLORS.length],
       createdAt: spec.createdAt || todayKey()
     };

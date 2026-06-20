@@ -413,6 +413,21 @@ body[data-theme="dark"] .al-yel { color: #ffc94d; }
 }
 .feed-status { padding: 10px 4px; font-size: 12.5px; color: var(--dim); }
 .feed-status.err { color: var(--dn); }
+
+/* research grouped by skill */
+.facet-block { margin-bottom: 14px; }
+.facet-block:last-child { margin-bottom: 0; }
+.facet-head {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 4px 0 2px; border-bottom: 1px solid var(--bd2); margin-bottom: 4px;
+}
+.facet-name {
+  font-size: 13px; font-weight: 700; color: var(--acc);
+  background: var(--acc-soft); border-radius: 7px; padding: 2px 9px;
+}
+.facet-why { font-size: 11.5px; color: var(--faint); }
+.facet-items { min-height: 20px; }
+.skills-edit { font-size: 11.5px; font-weight: 500; margin-left: 6px; }
 .restabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
 .primer { font-size: 13px; color: var(--dim); line-height: 1.6; }
 .primer b { color: var(--txt); }
@@ -494,6 +509,21 @@ canvas.chart { display: block; width: 100%; }
 .prod-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prod-meta { font-size: 11.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* skill chips in the habit form */
+.skill-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 500;
+  background: var(--acc-soft); color: var(--acc);
+  border-radius: 999px; padding: 4px 6px 4px 12px;
+}
+.skill-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: none; cursor: pointer; font-size: 14px; line-height: 1;
+  background: transparent; color: var(--acc);
+}
+.skill-x:hover { background: var(--acc); color: var(--on-acc); }
 
 /* ---------- misc ---------- */
 .hr { border: none; border-top: 1px solid var(--bd2); margin: 12px 0; }

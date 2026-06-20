@@ -56,8 +56,16 @@ HT.panels.form = (function () {
       S.COLORS.map(c => '<span class="swatch ' + (c === color ? 'on' : '') + '" data-c="' + c + '" style="background:' + c + '"></span>').join('') +
       '</div></div>' +
 
-      '<div class="form-row"><label>Topic keywords <span class="dim" style="font-weight:400">— comma-separated, powers the Discover tab</span></label>' +
+      '<div class="form-row"><label>Topic keywords <span class="dim" style="font-weight:400">— comma-separated, powers apps, gear &amp; discussion in Discover</span></label>' +
       '<input class="in" id="f-kw" placeholder="e.g. meditation, mindfulness" value="' + (h ? U.esc(h.keywords.join(', ')) : '') + '"></div>' +
+
+      '<div class="form-row"><label>Skills this builds <span class="dim" style="font-weight:400">— powers “Research by skill” in Discover</span></label>' +
+      '<div class="chips" id="f-skills"></div>' +
+      '<div class="inline" style="margin-top:8px">' +
+      '<input class="in in-sm" id="f-skill-add" placeholder="Add a skill…" style="width:200px">' +
+      '<button type="button" class="btn btn-sm" id="f-skill-addbtn">Add</button>' +
+      '<button type="button" class="btn btn-sm" id="f-skill-suggest">↻ Suggest from habit</button>' +
+      '</div></div>' +
 
       '<div class="inline" style="margin-top:20px">' +
       '<button class="btn btn-acc" id="f-save">' + (isEdit ? 'Save changes' : 'Add habit') + '</button>' +
@@ -100,6 +108,52 @@ HT.panels.form = (function () {
       };
     });
 
+    /* skills editor — auto-suggested from the map, fully user-editable */
+    let facets = (isEdit && h.facets && h.facets.length)
+      ? h.facets.slice()
+      : HT.topics.suggest({ name: h ? h.name : '', keywords: h ? h.keywords : [] });
+    facets = facets.map(x => ({ label: x.label, why: x.why || '', q: x.q || '' }));
+
+    function renderSkills() {
+      const box = $('#f-skills');
+      if (!facets.length) {
+        box.innerHTML = '<span class="dim" style="font-size:12px">No skills yet — add one, or use Suggest.</span>';
+        return;
+      }
+      box.innerHTML = facets.map((fc, i) =>
+        '<span class="skill-chip" title="' + U.esc(fc.why || '') + '">' + U.esc(fc.label) +
+        '<button type="button" class="skill-x" data-i="' + i + '" aria-label="Remove">×</button></span>'
+      ).join('');
+      box.querySelectorAll('.skill-x').forEach(b => {
+        b.onclick = () => { facets.splice(+b.dataset.i, 1); renderSkills(); };
+      });
+    }
+    renderSkills();
+
+    function addSkill() {
+      const inp = $('#f-skill-add');
+      const v = inp.value.trim();
+      if (v && !facets.some(x => x.label.toLowerCase() === v.toLowerCase())) facets.push({ label: v, why: '', q: '' });
+      inp.value = '';
+      renderSkills();
+      inp.focus();
+    }
+    $('#f-skill-addbtn').onclick = addSkill;
+    $('#f-skill-add').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } });
+    $('#f-skill-suggest').onclick = () => {
+      const nm = $('#f-name').value.trim();
+      const kw = $('#f-kw').value.split(',').map(s => s.trim()).filter(Boolean);
+      const sugg = HT.topics.suggest({ name: nm, keywords: kw });
+      let added = 0;
+      sugg.forEach(s => {
+        if (!facets.some(x => x.label.toLowerCase() === s.label.toLowerCase())) {
+          facets.push({ label: s.label, why: s.why || '', q: s.q || '' }); added++;
+        }
+      });
+      renderSkills();
+      if (!added) HT.app.msg(sugg.length ? 'Those skills are already added.' : 'No suggestions yet — add a name or keywords first.', 'info');
+    };
+
     function fail(msg) {
       const e = $('#f-err');
       e.textContent = msg;
@@ -129,7 +183,8 @@ HT.panels.form = (function () {
         unit: type === 'qty' ? $('#f-unit').value.trim() : '',
         schedule: schedKind === 'weekdays' ? { kind: 'weekdays', days: days } : { kind: 'daily', days: [] },
         color: swatch ? swatch.dataset.c : S.COLORS[0],
-        keywords: keywords.length ? keywords : [name.toLowerCase()]
+        keywords: keywords.length ? keywords : [name.toLowerCase()],
+        facets: facets.length ? facets.map(x => x.q ? { label: x.label, why: x.why || '', q: x.q } : { label: x.label }) : null
       };
 
       if (isEdit) {

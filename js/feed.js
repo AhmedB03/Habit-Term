@@ -52,11 +52,11 @@ HT.feed = (function () {
     return p;
   }
 
-  /* latest studies via NCBI PubMed E-utilities (default sort: most recent) */
+  /* studies via NCBI PubMed E-utilities, ranked by relevance (PubMed "Best Match") */
   function studies(query, n, force) {
     return cached('pm', query + '_' + n, force, async () => {
       const es = await pmGet(
-        'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=' +
+        'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&sort=relevance&retmax=' +
         n + '&term=' + encodeURIComponent(query)
       );
       const ids = (es.esearchresult && es.esearchresult.idlist) || [];
