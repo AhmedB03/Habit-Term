@@ -143,14 +143,19 @@ HT.metrics = (function () {
   }
 
   /* ---------- grading ---------- */
-  const LETTERS = [[97, 'A+'], [93, 'A'], [90, 'A-'], [87, 'B+'], [83, 'B'], [80, 'B-'],
-                   [77, 'C+'], [73, 'C'], [70, 'C-'], [67, 'D+'], [63, 'D'], [60, 'D-'], [0, 'F']];
-  const POINTS = { 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-                   'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'D-': 0.7, 'F': 0 };
+  /* friendly growth tiers replace academic letter grades */
+  const TIERS = [
+    { min: 85, key: 'thriving', label: 'Thriving', emoji: '🌳' },
+    { min: 70, key: 'strong',   label: 'Strong',   emoji: '🌿' },
+    { min: 55, key: 'growing',  label: 'Growing',  emoji: '🌱' },
+    { min: 35, key: 'building', label: 'Building', emoji: '🪴' },
+    { min: 0,  key: 'dormant',  label: 'Dormant',  emoji: '🍂' }
+  ];
 
-  function letterFor(score) {
-    for (let i = 0; i < LETTERS.length; i++) if (score >= LETTERS[i][0]) return LETTERS[i][1];
-    return 'F';
+  function tierFor(score) {
+    if (score == null || isNaN(score)) return { key: 'new', label: 'New', emoji: '🌱' };
+    for (let i = 0; i < TIERS.length; i++) if (score >= TIERS[i].min) return TIERS[i];
+    return TIERS[TIERS.length - 1];
   }
 
   function weeklyRates(h, weeks) {
@@ -165,8 +170,8 @@ HT.metrics = (function () {
 
   function gradeOf(h) {
     if (scheduledCount(h) < 5) {
-      return { letter: 'NR', score: null, parts: null, outlook: 'NEW',
-               advice: 'Brand new — your grade unlocks after 5 scheduled days.' };
+      return { tier: tierFor(null), score: null, parts: null, outlook: 'NEW',
+               advice: 'Brand new — your rating unlocks after 5 scheduled days.' };
     }
     const r30 = rate(h, 30); const r30v = r30 == null ? 0 : r30;
     const r7 = rate(h, 7); const r7v = r7 == null ? r30v : r7;
@@ -181,7 +186,7 @@ HT.metrics = (function () {
     const CON = wr.length >= 3 ? U.clamp(100 - U.stdev(wr) * 220, 0, 100) : 70;  /* consistency */
     const LIFE = Math.sqrt(allv) * 100;                       /* lifetime */
     const score = 0.45 * C30 + 0.20 * TRD + 0.15 * STK + 0.10 * CON + 0.10 * LIFE;
-    const letter = letterFor(score);
+    const tier = tierFor(score);
     const drift = r7v - r30v;
     const outlook = drift > 0.07 ? 'POSITIVE' : drift < -0.07 ? 'NEGATIVE' : 'STABLE';
 
@@ -193,14 +198,16 @@ HT.metrics = (function () {
     else if (outlook === 'POSITIVE') advice = 'Trending up — keep doing what you\'re doing.';
     else advice = 'Steady. Consistency compounds.';
 
-    return { letter, score, parts: { C30, TRD, STK, CON, LIFE }, outlook, advice };
+    return { tier, score, parts: { C30, TRD, STK, CON, LIFE }, outlook, advice };
   }
 
-  function gpa() {
-    const gs = S.habits().map(gradeOf).filter(g => g.letter !== 'NR');
+  /* overall "habit health": the average 0–100 score across rated habits */
+  function healthScore() {
+    const gs = S.habits().map(gradeOf).filter(g => g.score != null);
     if (!gs.length) return null;
-    return gs.reduce((a, g) => a + POINTS[g.letter], 0) / gs.length;
+    return gs.reduce((a, g) => a + g.score, 0) / gs.length;
   }
+  function healthTier() { return tierFor(healthScore()); }
 
   /* ---------- portfolio-level ---------- */
   function movers() {
@@ -324,7 +331,7 @@ HT.metrics = (function () {
     streak, bestStreak, scheduledCount,
     windowStats, rate, rateAll, weeklyRates,
     priceSeries, price, priceDelta, volatility, habixSeries,
-    gradeOf, gpa, letterFor,
+    gradeOf, tierFor, healthScore, healthTier,
     movers, dayCompletion, perfectDays, portfolioStats, weekdayRates,
     correlations, alerts
   };

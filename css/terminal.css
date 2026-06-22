@@ -125,6 +125,26 @@ button { font-family: var(--font); }
 .navchip.active { background: var(--acc-soft); color: var(--acc); font-weight: 600; }
 #topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 
+/* mobile bottom tab bar — hidden on desktop, shown under 760px */
+#bottomnav {
+  display: none; flex: none;
+  background: var(--panel);
+  border-top: 1px solid var(--bd);
+  padding: 6px 4px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+}
+.navtab {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: none; cursor: pointer;
+  color: var(--faint); padding: 5px 2px; border-radius: 12px;
+}
+.navtab .nt-ico { font-size: 20px; line-height: 1; opacity: .5; }
+.navtab .nt-lab { font-size: 10.5px; font-weight: 600; }
+.navtab.active { color: var(--acc); }
+.navtab.active .nt-ico { opacity: 1; }
+.navtab:active { background: var(--panel2); }
+
 /* ---------- buttons ---------- */
 .btn {
   font-size: 13px; font-weight: 600;
@@ -144,6 +164,8 @@ button { font-family: var(--font); }
 .btn:disabled { opacity: .4; cursor: default; }
 a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
 a.btn:hover { text-decoration: none; }
+.btn-icon { padding: 7px 11px; }
+.btn-add .add-mini { display: none; }
 
 /* ---------- quick-action / search bar ---------- */
 #cmdbar {
@@ -220,13 +242,25 @@ a.btn:hover { text-decoration: none; }
 }
 @media (max-width: 760px) {
   .col-3, .col-4, .col-5, .col-6, .col-7, .col-8 { grid-column: span 12; }
-  #nav { order: 3; width: 100%; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
-  .navchip { flex: none; }
+  #topbar { padding: 11px 14px; gap: 8px; }
+  #logo { font-size: 16px; }
+  #nav { display: none; }
+  #bottomnav { display: flex; }
+  .btn-add .add-full { display: none; }
+  .btn-add .add-mini { display: inline; font-size: 16px; line-height: 1; }
+  .hide-mobile { display: none !important; }
+  #cmdbar { display: none; }            /* command bar is a desktop power-feature */
+  #main { padding: 14px 13px 20px; }
+  .grid { gap: 12px; }
+  .panel-h { padding: 12px 14px; }
+  .panel-b { padding: 13px 14px; }
+  .checkbox { width: 30px; height: 30px; }
+  #msgline { top: 60px; }
 }
 @media (max-width: 600px) {
   .hrow { flex-wrap: wrap; }
   .h-main { flex: 1 1 120px; }
-  .h-ctl { order: 10; flex-basis: 100%; margin-left: 40px; }
+  .h-ctl { order: 10; flex-basis: 100%; margin-left: 42px; }
 }
 
 .panel {
@@ -377,10 +411,35 @@ body[data-theme="dark"] .al-yel { color: #ffc94d; }
 .bar-lab { color: var(--dim); white-space: nowrap; overflow: hidden; font-weight: 500; }
 .bar-val { text-align: right; color: var(--txt); font-weight: 600; }
 
-/* ---------- grades ---------- */
-.grade-letter { font-size: 30px; font-weight: 800; line-height: 1; }
-.g-A { color: var(--up); } .g-B { color: #7bb53b; } .g-C { color: #d99a06; }
-.g-D { color: #e8762d; } .g-F { color: var(--dn); } .g-N { color: var(--faint); }
+/* ---------- health tiers ---------- */
+.tier-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; line-height: 1.4;
+  padding: 2px 10px; border-radius: 999px; white-space: nowrap;
+  background: var(--panel2); color: var(--dim);
+}
+.tier-thriving { background: var(--up-soft); color: var(--up); }
+.tier-strong   { background: var(--up-soft); color: var(--up); }
+.tier-growing  { background: var(--acc-soft); color: var(--acc); }
+.tier-building { background: color-mix(in srgb, #e9a200 16%, transparent); color: #b07b00; }
+.tier-dormant  { background: var(--dn-soft); color: var(--dn); }
+.tier-new      { background: var(--panel2); color: var(--faint); }
+body[data-theme="dark"] .tier-building { color: #ffc94d; }
+.tier-emoji { font-size: 28px; line-height: 1; }
+
+/* overall health donut */
+.health-ring {
+  width: 132px; height: 132px; border-radius: 50%; margin: 4px auto 0;
+  display: grid; place-items: center;
+  background: conic-gradient(var(--up) calc(var(--p) * 1%), var(--bd2) 0);
+}
+.health-ring-in {
+  width: 104px; height: 104px; border-radius: 50%;
+  background: var(--panel); display: grid; place-items: center;
+}
+.health-emoji { font-size: 30px; line-height: 1; }
+
+/* ---------- grade/health cards ---------- */
 .gradecard { display: flex; gap: 16px; padding: 13px 8px; border-bottom: 1px solid var(--bd2); align-items: flex-start; border-radius: 10px; }
 .gradecard:hover { background: var(--panel2); }
 .gradecard:last-child { border-bottom: none; }

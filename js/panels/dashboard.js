@@ -26,7 +26,8 @@ HT.panels.dashboard = (function () {
     const d1 = hxPrev ? (hxLast - hxPrev) / hxPrev * 100 : 0;
     const i7 = Math.max(0, hx.length - 8);
     const d7 = (hx.length && hx[i7].p) ? (hxLast - hx[i7].p) / hx[i7].p * 100 : 0;
-    const gpa = M.gpa();
+    const health = M.healthScore();
+    const htier = M.healthTier();
     const dc = M.dayCompletion(today);
     const alerts = M.alerts();
     const mv = M.movers();
@@ -44,7 +45,7 @@ HT.panels.dashboard = (function () {
         '</div>' +
         '<canvas class="chart" id="db-hx" style="margin-top:10px"></canvas>' +
         '<div class="kv" style="margin-top:12px">' +
-          '<span class="k">Grade average</span><span class="v num">' + (gpa == null ? '—' : gpa.toFixed(2) + ' GPA') + '</span>' +
+          '<span class="k">Habit health</span><span class="v num">' + (health == null ? '—' : htier.emoji + ' ' + Math.round(health) + ' · ' + htier.label) + '</span>' +
           '<span class="k">Done today</span><span class="v num">' + dc.filled + ' of ' + dc.due + '</span>' +
           '<span class="k">Active habits</span><span class="v num">' + hs.length + '</span>' +
         '</div>' +
@@ -58,7 +59,7 @@ HT.panels.dashboard = (function () {
       '<button class="btn btn-sm" data-cmd="TODAY">Open</button></span></div>' +
       '<div class="panel-b" id="db-book"></div></div>' +
 
-      '<div class="panel col-4"><div class="panel-h"><span>Trending</span><span class="ph-aux">7-day change</span></div>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Trending</span><span class="ph-aux"><button class="btn btn-sm" data-cmd="HAB">All habits</button></span></div>' +
       '<div class="panel-b" id="db-movers"></div></div>' +
 
       '<div class="panel col-4"><div class="panel-h"><span>Activity</span><span class="ph-aux">last 35 days</span></div>' +

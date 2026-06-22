@@ -105,7 +105,7 @@ HT.panels.premium = (function () {
         '<div class="feat-list">' +
         '<div class="feat"><span class="fk">✓</span> Unlimited habits <span class="dim">(free: ' + P.FREE_HABIT_LIMIT + ')</span></div>' +
         '<div class="feat"><span class="fk">✓</span> Full Stats — trends, weekdays, habit pairs</div>' +
-        '<div class="feat"><span class="fk">✓</span> Report card — grades, GPA &amp; advice</div>' +
+        '<div class="feat"><span class="fk">✓</span> Habit Health — growth tiers &amp; advice</div>' +
         '<div class="feat"><span class="fk">✓</span> Dark mode + all accent colors</div>' +
         '<div class="feat"><span class="fk">✓</span> Every future Premium feature</div>' +
         '<div class="feat"><span class="fk">✓</span> Support an indie developer 💜</div>' +
@@ -131,7 +131,7 @@ HT.panels.premium = (function () {
       compareRow('Streaks &amp; momentum scores', '✓', '✓') +
       compareRow('Discover — research, apps &amp; gear', '✓', '✓') +
       compareRow('Stats — trends &amp; habit pairs', '—', '✓') +
-      compareRow('Report card — grades &amp; GPA', '—', '✓') +
+      compareRow('Habit Health — tiers &amp; advice', '—', '✓') +
       compareRow('Dark mode &amp; accent colors', '—', '✓') +
       compareRow('Backup export / import', '✓', '✓') +
       '</tbody></table>' +

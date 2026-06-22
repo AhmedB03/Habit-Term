@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Habiterm — Habit Tracker</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%236c5ce7'/%3E%3Cpath d='M4.2 8.6l2.6 2.6 5-5.6' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f4f5fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131520" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Habiterm">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <link rel="stylesheet" href="css/terminal.css">
 </head>
 <body data-acc="violet" data-theme="light">
@@ -17,15 +28,15 @@
       <button class="navchip" data-cmd="TODAY" data-panel="today" title="Today's habits (F2)">Today</button>
       <button class="navchip" data-cmd="CAL"   data-panel="cal"   title="Calendar (F3)">Calendar</button>
       <button class="navchip" data-cmd="RPT"   data-panel="rpt"   title="Stats (F4)">Stats</button>
-      <button class="navchip" data-cmd="GRADE" data-panel="grade" title="Report card (F6)">Grades</button>
+      <button class="navchip" data-cmd="GRADE" data-panel="grade" title="Habit health (F6)">Health</button>
       <button class="navchip" data-cmd="RES"   data-panel="res"   title="Research & ideas (F7)">Discover</button>
       <button class="navchip" data-cmd="HAB"   data-panel="hab"   title="All habits (F8)">Habits</button>
     </nav>
     <div id="topbar-right">
-      <button class="btn btn-acc" data-cmd="ADD" title="Add a new habit">+ New habit</button>
-      <button class="btn" data-cmd="PREMIUM" title="Habiterm Premium">👑</button>
-      <button class="btn" data-cmd="SET" title="Settings (F9)">⚙</button>
-      <button class="btn" data-cmd="HELP" title="Help (F10)">?</button>
+      <button class="btn btn-acc btn-add" data-cmd="ADD" title="Add a new habit"><span class="add-full">+ New habit</span><span class="add-mini">+</span></button>
+      <button class="btn btn-icon" data-cmd="PREMIUM" title="Habiterm Premium">👑</button>
+      <button class="btn btn-icon" data-cmd="SET" title="Settings (F9)">⚙</button>
+      <button class="btn btn-icon hide-mobile" data-cmd="HELP" title="Help (F10)">?</button>
     </div>
   </header>
 
@@ -39,6 +50,15 @@
   <div id="msgline" class="hidden"></div>
 
   <main id="main"></main>
+
+  <!-- mobile bottom tab bar -->
+  <nav id="bottomnav">
+    <button class="navtab" data-cmd="DASH"  data-panel="dash"><span class="nt-ico">🏠</span><span class="nt-lab">Home</span></button>
+    <button class="navtab" data-cmd="TODAY" data-panel="today"><span class="nt-ico">✓</span><span class="nt-lab">Today</span></button>
+    <button class="navtab" data-cmd="CAL"   data-panel="cal"><span class="nt-ico">📅</span><span class="nt-lab">Calendar</span></button>
+    <button class="navtab" data-cmd="GRADE" data-panel="grade"><span class="nt-ico">🌳</span><span class="nt-lab">Health</span></button>
+    <button class="navtab" data-cmd="RES"   data-panel="res"><span class="nt-ico">🧭</span><span class="nt-lab">Discover</span></button>
+  </nav>
 
 </div>
 

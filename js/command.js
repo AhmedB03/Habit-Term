@@ -11,7 +11,7 @@ HT.command = (function () {
     { c: 'TODAY', d: "Today's habits — check them off", run: () => HT.app.navigate('today') },
     { c: 'CAL', d: 'Calendar — view & edit any day', run: () => HT.app.navigate('cal') },
     { c: 'RPT', d: 'Stats — completion, weekdays, habit pairs', run: () => HT.app.navigate('rpt') },
-    { c: 'GRADE', d: 'Report card — grades & advice', run: () => HT.app.navigate('grade') },
+    { c: 'GRADE', d: 'Health — growth tiers & advice', run: () => HT.app.navigate('grade') },
     { c: 'RES', d: 'Discover — research & ideas for a habit', run: a => HT.app.navigate('res', a[0] || null) },
     { c: 'HAB', d: 'My habits — list, or one habit\'s details', run: a => HT.app.navigate('hab', a[0] || null) },
     { c: 'ADD', d: 'Add a new habit', run: () => HT.app.navigate('form') },
@@ -52,7 +52,7 @@ HT.command = (function () {
   ];
   const ALIAS = { HOME: 'DASH', NEWS: 'RES', LIST: 'HAB', HABITS: 'HAB', STATS: 'RPT',
                   DISCOVER: 'RES', NEW: 'ADD', '?': 'HELP', SETTINGS: 'SET',
-                  UPGRADE: 'PREMIUM', PRO: 'PREMIUM', BUY: 'PREMIUM' };
+                  UPGRADE: 'PREMIUM', PRO: 'PREMIUM', BUY: 'PREMIUM', HEALTH: 'GRADE', GRADES: 'GRADE' };
   const TICKER_CMDS = ['DONE', 'UNDO', 'HAB', 'RES', 'EDIT'];
 
   function perfectDay(key) {

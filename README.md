@@ -1,8 +1,9 @@
 # ✓ Habiterm — a friendly habit tracker
 
 A clean, modern habit tracker that runs entirely in your browser. Every habit gets a
-momentum score, a streak, a letter grade — and its own Discover feed pulling the latest
-studies and products from the real world.
+momentum score, a streak, a growth-tier health rating — and its own Discover feed
+pulling the latest studies and products from the real world. Installable on your phone
+as a PWA, works offline.
 
 **Zero dependencies. No build step. No account. Your data never leaves your machine**
 (except the Discover queries themselves).
@@ -15,6 +16,18 @@ studies and products from the real world.
 First launch offers **demo data** (6 habits, 120 days of generated history) so
 every page lights up immediately. Erase it from Settings when you're ready to track for real.
 
+## Install on your phone 📱
+
+Habiterm is a installable PWA, redesigned mobile-first with a bottom tab bar.
+Serve it over http(s) (the service worker needs it), open the URL on your phone, and:
+
+- **iPhone (Safari):** Share → *Add to Home Screen*
+- **Android (Chrome):** menu → *Install app* / *Add to Home Screen*
+
+It then launches full-screen like a native app and keeps working offline (your data and
+the app shell are cached; Discover feeds need a connection). The web app manifest,
+`sw.js` service worker, and app icons are all included — no build step.
+
 ## The pages
 
 | Page | Command | What it does |
@@ -23,7 +36,7 @@ every page lights up immediately. Erase it from Settings when you're ready to tr
 | Today | `TODAY` (F2) | Check off today's habits — circles, amount steppers, streaks, daily stats |
 | Calendar | `CAL` (F3) | Month grid with completion heat + per-habit dots; click any past day to view & edit |
 | Stats | `RPT` (F4) | 7/30/90-day completion with deltas, weekday analysis, habit-pair matrix |
-| Grades | `GRADE` (F6) | Letter grade per habit (A+…F), overall GPA, outlook, friendly advice |
+| Health | `GRADE` (F6) | Growth-tier rating per habit (🌱 Building → 🌿 Strong → 🌳 Thriving), overall habit-health score, outlook, friendly advice |
 | Discover | `RES [code]` (F7) | **Per habit**: latest apps & tools (App Store), gear links, **research grouped by the skills the habit trains**, Hacker News launches/discussion, Wikipedia primer |
 | Habits | `HAB [code]` (F8) | All habits, or one habit's full detail: score chart, stats, history |
 | Premium | `PREMIUM` | Plans, license activation, free-vs-premium comparison |
@@ -51,9 +64,11 @@ Autocomplete with Tab/↑/↓, command history, F-key page hopping.
   **−2.2%**, partial progress scales in between. Unscheduled days carry forward. The
   home-screen score is the average across habits. An unfinished "today" never moves
   the score (or breaks a streak) until the day ends.
-- **Grade** — 45% 30-day completion (√-curved: 85% is genuinely excellent), 20%
-  momentum (7d vs 30d), 15% streak power (14 straight = full marks), 10% week-to-week
-  consistency, 10% all-time record. New habits are ungraded until 5 scheduled days.
+- **Health** — a 0–100 score shown as a growth tier (🍂 Dormant · 🪴 Building · 🌱 Growing ·
+  🌿 Strong · 🌳 Thriving): 45% 30-day completion (√-curved: 85% is genuinely excellent),
+  20% momentum (7d vs 30d), 15% streak power (14 straight = full marks), 10% week-to-week
+  consistency, 10% all-time record. Overall "habit health" is the average across rated
+  habits. New habits are unrated until 5 scheduled days.
 - **Habit pairs** — phi coefficient over shared scheduled days in the last 60 days.
   Build routines around positive pairs.
 - **Heads up** — streaks at risk, streaks broken, slipping habits, record highs,
@@ -91,7 +106,7 @@ scoped search.
 Habiterm ships with two revenue streams, both wired and ready:
 
 1. **Premium** — free plan is 3 habits + core tracking; Premium ($19 lifetime by default)
-   unlocks unlimited habits, Stats, the report card, and dark mode + accent colors.
+   unlocks unlimited habits, Stats, Habit Health, and dark mode + accent colors.
    New users get a 14-day full trial. Buyers activate with a license key
    (`HT-XXXX-XXXX-XXXX`) — works offline.
 2. **Affiliate gear links** — every habit's Discover page links to Amazon/Etsy/eBay
@@ -123,16 +138,19 @@ inside `activate()` in `js/premium.js`.
 ## Files
 
 ```
-index.html            shell
-css/terminal.css      design system: themes, layout, components
-js/util.js            dates (local, DST-safe keys), formatting
+index.html            shell + top nav + mobile bottom tab bar + PWA tags
+manifest.webmanifest  PWA manifest (name, icons, standalone)
+sw.js                 service worker (offline app shell, network-first)
+icon-192/512*.png     app icons (incl. maskable)
+css/terminal.css      design system: themes, layout, components, mobile/bottom-nav
+js/util.js            dates (local, DST-safe keys), formatting, tier badge
 js/store.js           state, persistence, demo data
 js/premium.js         plans, trial, license keys, upgrade page  ← seller config lives here
 js/topics.js          habit → skill/topic map that drives "Research by skill"
-js/metrics.js         streaks, rates, momentum scores, grades, pairs, alerts
+js/metrics.js         streaks, rates, momentum scores, health tiers, pairs, alerts
 js/charts.js          hand-rolled canvas line/spark charts
-js/feed.js            PubMed / HN / Wikipedia clients + cache + throttle
+js/feed.js            PubMed / HN / Wikipedia / App Store clients + cache + throttle
 js/command.js         command parser, palette, keyboard
-js/panels/*.js        dashboard, today, calendar, report, grade, research, habit, manage
-js/app.js             boot, routing, toasts
+js/panels/*.js        dashboard, today, calendar, report, grade(health), research, habit, manage
+js/app.js             boot, routing, toasts, confetti, service-worker registration
 ```

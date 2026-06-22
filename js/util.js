@@ -31,6 +31,11 @@ HT.util = (function () {
     const v = x.toFixed(d == null ? 1 : d);
     return (x >= 0 ? '+' : '') + v + (suf || '');
   }
+  function tierBadge(tier, withLabel) {
+    if (!tier) return '';
+    return '<span class="tier-badge tier-' + tier.key + '">' + tier.emoji +
+      (withLabel === false ? '' : ' ' + esc(tier.label)) + '</span>';
+  }
   function arrow(x) { return x > 0.0001 ? '↑' : x < -0.0001 ? '↓' : '·'; }
   function udClass(x) { return x > 0.0001 ? 'up' : x < -0.0001 ? 'dn' : 'dim'; }
 
@@ -69,7 +74,7 @@ HT.util = (function () {
     WD, MONTHS, MONTHS_FULL,
     pad2, keyFromDate, parseKey, addDays, weekday, daysBetween,
     monthLabel, shortDate, longDate,
-    esc, clamp, fmtPct, signed, arrow, udClass,
+    esc, clamp, fmtPct, signed, arrow, udClass, tierBadge,
     uid, download, debounce, relTime, stdev
   };
 })();

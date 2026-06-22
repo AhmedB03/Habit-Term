@@ -35,7 +35,7 @@ HT.app = (function () {
   }
 
   function render() {
-    document.querySelectorAll('.navchip').forEach(b => {
+    document.querySelectorAll('.navchip, .navtab').forEach(b => {
       const pn = b.dataset.panel;
       const active = pn === route_.p ||
         (pn === 'cal' && route_.p === 'day') ||
@@ -155,6 +155,8 @@ HT.app = (function () {
       const p = ix < 0 ? hash : hash.slice(0, ix);
       const arg = ix < 0 ? null : decodeURIComponent(hash.slice(ix + 1));
       if (PANELS[p]) route_ = { p: p, arg: arg };
+    } else if (window.innerWidth <= 760) {
+      route_ = { p: 'today', arg: null };   /* phones open to the daily checklist, not the dense home */
     }
 
     document.addEventListener('click', e => {
@@ -166,6 +168,11 @@ HT.app = (function () {
 
     setInterval(rolloverTick, 5000);
     render();
+
+    /* PWA: register the service worker for offline + installability (http/https only) */
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* offline is a bonus, not required */ });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', boot);

@@ -1,0 +1,17 @@
+{
+  "name": "Habiterm — Habit Tracker",
+  "short_name": "Habiterm",
+  "description": "A friendly habit tracker with momentum, streaks, growth-tier health, and a Discover feed.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f5fa",
+  "theme_color": "#6c5ce7",
+  "categories": ["productivity", "lifestyle", "health"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

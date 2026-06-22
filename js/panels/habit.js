@@ -31,7 +31,7 @@ HT.panels.habit = (function () {
       '<div class="panel-b">' +
       '<table class="tbl"><thead><tr>' +
       '<th>Habit</th><th class="r">Momentum</th><th class="r">7 days</th><th class="r">Streak</th>' +
-      '<th class="r">This month</th><th class="r">Grade</th><th>Schedule</th><th>Goal</th>' +
+      '<th class="r">This month</th><th class="r">Health</th><th>Schedule</th><th>Goal</th>' +
       '</tr></thead><tbody>' +
       rows.map(r =>
         '<tr class="rowlink" data-cmd="HAB ' + U.esc(r.h.ticker) + '">' +
@@ -41,7 +41,7 @@ HT.panels.habit = (function () {
         '<td class="r num ' + U.udClass(r.d7) + '">' + U.arrow(r.d7) + ' ' + U.signed(r.d7, 1, '%') + '</td>' +
         '<td class="r num">' + (r.st > 0 ? '🔥 ' + r.st : '—') + '</td>' +
         '<td class="r num">' + U.fmtPct(r.r30) + '</td>' +
-        '<td class="r"><span class="g-' + r.g.letter[0] + '" style="font-weight:700">' + r.g.letter + '</span></td>' +
+        '<td class="r">' + U.tierBadge(r.g.tier, false) + '</td>' +
         '<td class="dim">' + M.scheduleDesc(r.h) + '</td>' +
         '<td class="dim">' + (r.h.type === 'qty' ? r.h.target + ' ' + U.esc(r.h.unit || 'units') : '✓ check') + '</td>' +
         '</tr>'
@@ -108,9 +108,10 @@ HT.panels.habit = (function () {
       '</div></div>' +
 
       '<div class="col-4">' +
-        '<div class="panel"><div class="panel-h"><span>Grade</span></div><div class="panel-b">' +
-        '<div class="inline" style="gap:16px"><span class="grade-letter g-' + g.letter[0] + '">' + g.letter + '</span>' +
-        '<span class="dim" style="font-size:12.5px">' + (g.score == null ? 'Not graded yet' : g.score.toFixed(1) + ' / 100 · ' + (OUTLOOK[g.outlook] || g.outlook)) + '</span></div>' +
+        '<div class="panel"><div class="panel-h"><span>Health</span></div><div class="panel-b">' +
+        '<div class="inline" style="gap:14px"><span class="tier-emoji" style="font-size:34px">' + g.tier.emoji + '</span>' +
+        '<div><div class="tier-badge tier-' + g.tier.key + '" style="font-size:13px">' + g.tier.label + '</div>' +
+        '<div class="dim" style="font-size:12.5px;margin-top:4px">' + (g.score == null ? 'Not rated yet' : Math.round(g.score) + ' / 100 · ' + (OUTLOOK[g.outlook] || g.outlook)) + '</div></div></div>' +
         '<div class="gc-advice" style="margin-top:10px">' + U.esc(g.advice) + '</div>' +
         '</div></div>' +
         '<div class="panel" style="margin-top:14px"><div class="panel-h"><span>History</span><span class="ph-aux">click a day to edit</span></div>' +

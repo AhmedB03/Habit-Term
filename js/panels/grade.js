@@ -1,4 +1,4 @@
-/* HABITERM — panels/grade.js : the report card — letter grades, GPA, advice */
+/* HABITERM — panels/grade.js : the Health page — growth tiers, overall health, advice */
 window.HT = window.HT || {};
 HT.panels = HT.panels || {};
 
@@ -9,12 +9,13 @@ HT.panels.grade = (function () {
   const PART_WEIGHTS = { C30: '45%', TRD: '20%', STK: '15%', CON: '10%', LIFE: '10%' };
   const OUTLOOK = { POSITIVE: 'Improving', NEGATIVE: 'Slipping', STABLE: 'Steady', NEW: 'New' };
 
-  function gpaLabel(g) {
-    if (g == null) return 'Not graded yet';
-    if (g >= 3.7) return "Dean's list 🏅";
-    if (g >= 3.0) return 'Solid work';
-    if (g >= 2.0) return 'Needs focus';
-    return 'Time for a reset';
+  function healthLabel(score) {
+    if (score == null) return 'Not rated yet';
+    if (score >= 85) return 'Your habits are thriving 🎉';
+    if (score >= 70) return 'Strong and steady';
+    if (score >= 55) return 'Growing nicely';
+    if (score >= 35) return 'Building momentum';
+    return 'Time to show these some love';
   }
 
   function render(root) {
@@ -22,35 +23,41 @@ HT.panels.grade = (function () {
     if (!hs.length) { HT.app.emptyState(root); return; }
     if (!HT.premium.active()) {
       HT.premium.renderLock(root, {
-        emoji: '🎓',
-        title: 'The report card is a Premium feature',
-        sub: 'Letter grades for every habit, an overall GPA,<br>and coaching advice on what to fix first.'
+        emoji: '🌳',
+        title: 'Habit Health is a Premium feature',
+        sub: 'A growth tier for every habit, your overall health score,<br>and coaching advice on what to nurture first.'
       });
       return;
     }
 
     const cards = hs.map(h => ({ h: h, g: M.gradeOf(h) }))
       .sort((a, b) => (b.g.score == null ? -1 : b.g.score) - (a.g.score == null ? -1 : a.g.score));
-    const gpa = M.gpa();
+    const health = M.healthScore();
+    const htier = M.healthTier();
     const pos = cards.filter(c => c.g.outlook === 'POSITIVE').length;
     const neg = cards.filter(c => c.g.outlook === 'NEGATIVE').length;
+    const ring = health == null ? 0 : Math.round(health);
 
     root.innerHTML =
       '<div class="grid">' +
-      '<div class="panel col-4"><div class="panel-h"><span>Grade average</span></div>' +
-      '<div class="panel-b">' +
-        '<div class="hero-num num ' + (gpa != null && gpa >= 3 ? 'up' : gpa != null && gpa < 2 ? 'dn' : '') + '">' +
-          (gpa == null ? '—' : gpa.toFixed(2)) + '</div>' +
-        '<div class="hero-sub acc" style="font-weight:600">' + gpaLabel(gpa) + '</div>' +
-        '<div class="kv" style="margin-top:14px">' +
-          '<span class="k">Graded habits</span><span class="v num">' + cards.filter(c => c.g.letter !== 'NR').length + ' of ' + hs.length + '</span>' +
+      '<div class="panel col-4"><div class="panel-h"><span>Habit health</span>' +
+      '<span class="ph-aux"><button class="btn btn-sm" data-cmd="RPT">Full stats</button></span></div>' +
+      '<div class="panel-b" style="text-align:center">' +
+        '<div class="health-ring" style="--p:' + ring + '">' +
+          '<div class="health-ring-in"><div class="health-emoji">' + htier.emoji + '</div>' +
+          '<div class="hero-num num" style="font-size:30px">' + (health == null ? '—' : ring) + '</div></div>' +
+        '</div>' +
+        '<div class="tier-badge tier-' + htier.key + '" style="margin-top:12px;font-size:14px;padding:4px 14px">' + htier.emoji + ' ' + htier.label + '</div>' +
+        '<div class="dim" style="margin-top:8px">' + healthLabel(health) + '</div>' +
+        '<div class="kv" style="margin-top:16px;text-align:left">' +
+          '<span class="k">Rated habits</span><span class="v num">' + cards.filter(c => c.g.score != null).length + ' of ' + hs.length + '</span>' +
           '<span class="k">Improving</span><span class="v num up">' + pos + '</span>' +
           '<span class="k">Slipping</span><span class="v num ' + (neg ? 'dn' : 'dim') + '">' + neg + '</span>' +
         '</div>' +
-        '<div class="dim" style="font-size:11.5px;margin-top:16px;line-height:1.6">How grades work: 45% 30-day completion · 20% momentum (this week vs this month) · 15% streak · 10% consistency · 10% all-time record.</div>' +
+        '<div class="dim" style="font-size:11.5px;margin-top:16px;line-height:1.6;text-align:left">Health blends: 45% 30-day completion · 20% momentum (this week vs this month) · 15% streak · 10% consistency · 10% all-time record.</div>' +
       '</div></div>' +
 
-      '<div class="panel col-8"><div class="panel-h"><span>Report card</span><span class="ph-aux">click a habit for details</span></div>' +
+      '<div class="panel col-8"><div class="panel-h"><span>Your habits</span><span class="ph-aux">tap one for details</span></div>' +
       '<div class="panel-b" id="gr-cards"></div></div>' +
       '</div>';
 
@@ -72,11 +79,12 @@ HT.panels.grade = (function () {
       }
       const oCls = g.outlook === 'POSITIVE' ? 'up' : g.outlook === 'NEGATIVE' ? 'dn' : 'dim';
       card.innerHTML =
-        '<div class="gc-letter"><div class="grade-letter g-' + g.letter[0] + '">' + g.letter + '</div>' +
-        '<div class="gc-score num">' + (g.score == null ? 'New' : g.score.toFixed(1) + ' / 100') + '</div></div>' +
+        '<div class="gc-letter"><div class="tier-emoji">' + g.tier.emoji + '</div>' +
+        '<div class="gc-score num">' + (g.score == null ? 'New' : Math.round(g.score) + '/100') + '</div></div>' +
         '<div class="gc-main">' +
           '<div><span class="tkr-dot" style="background:' + c.h.color + '"></span><span class="tkr">' + U.esc(c.h.name) + '</span> ' +
-          '<span class="tag ' + (oCls === 'up' ? 'tag-fill' : oCls === 'dn' ? '' : 'tag-off') + '" ' +
+          U.tierBadge(g.tier) +
+          ' <span class="tag ' + (oCls === 'up' ? 'tag-fill' : oCls === 'dn' ? '' : 'tag-off') + '" ' +
           (oCls === 'dn' ? 'style="background:var(--dn-soft);color:var(--dn)"' : '') + '>' +
           (OUTLOOK[g.outlook] || g.outlook) + '</span></div>' +
           '<div class="gc-advice">' + U.esc(g.advice) + '</div>' +

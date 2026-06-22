@@ -292,7 +292,7 @@ HT.panels.help = (function () {
       row('TODAY', "Today's habits — check them off") +
       row('CAL', 'Calendar — view & edit any day') +
       row('RPT', 'Stats — completion, weekdays, habit pairs') +
-      row('GRADE', 'Report card — grades & advice') +
+      row('GRADE', 'Health — growth tiers & advice') +
       row('RES [code]', 'Discover — research & ideas') +
       row('HAB [code]', 'Your habits, or one habit\'s details') +
       row('&lt;code&gt;', 'Just type a habit\'s code to jump to it') +
@@ -310,7 +310,7 @@ HT.panels.help = (function () {
       '<div class="panel col-6"><div class="panel-h"><span>Keyboard</span></div>' +
       '<div class="panel-b"><table class="tbl"><tbody>' +
       row('<kbd>F1</kbd>–<kbd>F4</kbd>', 'Home · Today · Calendar · Stats') +
-      row('<kbd>F6</kbd>–<kbd>F10</kbd>', 'Grades · Discover · Habits · Settings · Help') +
+      row('<kbd>F6</kbd>–<kbd>F10</kbd>', 'Health · Discover · Habits · Settings · Help') +
       row('<kbd>/</kbd> or <kbd>Ctrl+K</kbd>', 'Jump to the search bar') +
       row('<kbd>Tab</kbd>', 'Autocomplete the highlighted suggestion') +
       row('<kbd>↑</kbd> <kbd>↓</kbd>', 'Command history / move through suggestions') +
@@ -320,7 +320,7 @@ HT.panels.help = (function () {
       '<div class="section-title">How the numbers work</div>' +
       '<div class="dim" style="font-size:12.5px;line-height:1.8">' +
       '<b class="wht">Momentum</b> — every habit starts at 100. Doing it nudges the score up about 1.8%, missing pulls it down 2.2%, partial progress lands in between.<br>' +
-      '<b class="wht">Grade</b> — 45% 30-day completion, 20% momentum (this week vs this month), 15% streak, 10% consistency, 10% all-time.<br>' +
+      '<b class="wht">Health</b> — a 0–100 score shown as a growth tier: 45% 30-day completion, 20% momentum (this week vs this month), 15% streak, 10% consistency, 10% all-time.<br>' +
       '<b class="wht">Streak</b> — counts scheduled days only; an unfinished "today" never breaks it until the day ends.<br>' +
       '<b class="wht">Habit pairs</b> — how often two habits are done together over the last 60 days.</div>' +
       '</div></div>' +

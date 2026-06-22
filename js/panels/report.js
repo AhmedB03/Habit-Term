@@ -41,7 +41,7 @@ HT.panels.report = (function () {
       '<div class="panel-b">' +
         '<table class="tbl"><thead><tr>' +
         '<th>Habit</th><th class="r">Done</th><th class="r">Scheduled</th><th class="r">Rate</th>' +
-        '<th class="r">vs prev ' + n + 'd</th><th class="r">Streak</th><th class="r">Best</th><th class="r">Grade</th>' +
+        '<th class="r">vs prev ' + n + 'd</th><th class="r">Streak</th><th class="r">Best</th><th class="r">Health</th>' +
         '</tr></thead><tbody>' +
         rows.map(r =>
           '<tr class="rowlink" data-cmd="HAB ' + U.esc(r.h.ticker) + '">' +
@@ -52,7 +52,7 @@ HT.panels.report = (function () {
           '<td class="r num ' + (r.delta == null ? 'dim' : U.udClass(r.delta)) + '">' + (r.delta == null ? '—' : U.signed(r.delta, 0, ' pts')) + '</td>' +
           '<td class="r num">' + (r.st > 0 ? '🔥 ' + r.st : '—') + '</td>' +
           '<td class="r num dim">' + r.best + '</td>' +
-          '<td class="r"><span class="g-' + r.g.letter[0] + '" style="font-weight:700">' + r.g.letter + '</span></td>' +
+          '<td class="r">' + U.tierBadge(r.g.tier, false) + '</td>' +
           '</tr>'
         ).join('') +
         '</tbody></table>' +
